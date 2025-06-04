@@ -270,6 +270,32 @@ def start_terminal_interface(interpreter):
             "type": bool,
         },
         {
+            "name": "openwebui_server",
+            "help_text": "start The_Colonel as an Open WebUI compatible server",
+            "type": bool,
+        },
+        {
+            "name": "host",
+            "help_text": "host for the server (default: localhost)",
+            "type": str,
+            "default": "localhost",
+        },
+        {
+            "name": "port",
+            "help_text": "port for the server (default: 8264 for Open WebUI server, 8000 for regular server)",
+            "type": int,
+        },
+        {
+            "name": "auth_token",
+            "help_text": "authentication token for remote server access",
+            "type": str,
+        },
+        {
+            "name": "server_profile",
+            "help_text": "profile to use for Open WebUI server (default: gpt-4.1-mini.py)",
+            "type": str,
+        },
+        {
             "name": "version",
             "help_text": "get Open Interpreter's version number",
             "type": bool,
@@ -409,9 +435,12 @@ Use """ to write multi-line messages.
         return
 
     if args.version:
-        version = pkg_resources.get_distribution("open-interpreter").version
-        update_name = "Developer Preview"  # Change this with each major update
-        print(f"Open Interpreter {version} {update_name}")
+        try:
+            version = pkg_resources.get_distribution("open-interpreter").version
+        except pkg_resources.DistributionNotFound:
+            version = "0.4.3-the-colonel"  # Fallback version for development
+        update_name = "The_Colonel"  # Change this with each major update
+        print(f"The_Colonel {version} {update_name}")
         return
 
     if args.no_highlight_active_line:
@@ -563,6 +592,16 @@ Use """ to write multi-line messages.
 
     if args.server:
         interpreter.server.run()
+        return
+        
+    if args.openwebui_server:
+        from interpreter.core.openwebui_server import server
+        default_port = 8264
+        port = args.port if args.port else default_port
+        host = args.host if args.host else "localhost"
+        auth_token = args.auth_token
+        
+        server(interpreter, host=host, port=port, auth_token=auth_token, profile_name=args.server_profile)
         return
 
     interpreter.in_terminal_interface = True

@@ -15,7 +15,10 @@ import os
 import threading
 import uuid
 
-import pkg_resources
+try:
+    import pkg_resources
+except ImportError:
+    pkg_resources = None
 import requests
 
 
@@ -47,9 +50,15 @@ user_id = get_or_create_uuid()
 def send_telemetry(event_name, properties=None):
     if properties is None:
         properties = {}
-    properties["oi_version"] = pkg_resources.get_distribution(
-        "open-interpreter"
-    ).version
+    try:
+        if pkg_resources:
+            properties["oi_version"] = pkg_resources.get_distribution(
+                "open-interpreter"
+            ).version
+        else:
+            properties["oi_version"] = "0.4.3-the-colonel"  # Fallback when pkg_resources unavailable
+    except (pkg_resources.DistributionNotFound if pkg_resources else Exception):
+        properties["oi_version"] = "0.4.3-the-colonel"  # Fallback for development
     try:
         url = "https://app.posthog.com/capture"
         headers = {"Content-Type": "application/json"}

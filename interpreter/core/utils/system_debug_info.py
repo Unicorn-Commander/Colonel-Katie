@@ -25,7 +25,10 @@ def get_oi_version():
         )
     except Exception as e:
         oi_version_cmd = str(e)
-    oi_version_pkg = pkg_resources.get_distribution("open-interpreter").version
+    try:
+        oi_version_pkg = pkg_resources.get_distribution("open-interpreter").version
+    except pkg_resources.DistributionNotFound:
+        oi_version_pkg = "0.4.3-the-colonel"  # Fallback for development
     oi_version = oi_version_cmd, oi_version_pkg
     return oi_version
 

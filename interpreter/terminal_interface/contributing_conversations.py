@@ -173,7 +173,10 @@ def contribute_conversations(
         return None
 
     url = "https://api.openinterpreter.com/v0/contribute/"
-    version = pkg_resources.get_distribution("open-interpreter").version
+    try:
+        version = pkg_resources.get_distribution("open-interpreter").version
+    except pkg_resources.DistributionNotFound:
+        version = "0.4.3-the-colonel"
 
     payload = {
         "conversation_id": conversation_id,

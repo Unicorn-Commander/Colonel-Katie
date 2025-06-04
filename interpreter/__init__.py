@@ -38,7 +38,10 @@ if "--os" in sys.argv:
         latest_version = response.json()["info"]["version"]
 
         # Get the current version using pkg_resources
-        current_version = pkg_resources.get_distribution("open-interpreter").version
+        try:
+            current_version = pkg_resources.get_distribution("open-interpreter").version
+        except pkg_resources.DistributionNotFound:
+            current_version = "0.4.3-the-colonel"
 
         return version.parse(latest_version) > version.parse(current_version)
 

@@ -1,0 +1,2 @@
+#!/bin/bash
+python -m interpreter.terminal_interface.start_terminal_interface "$@"
