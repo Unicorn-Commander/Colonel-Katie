@@ -30,7 +30,7 @@ The_Colonel is a powerful, battle-tested fork of Open Interpreter designed for s
 
 ```bash
 # Clone the repository
-git clone https://github.com/YourUsername/The_Colonel.git
+git clone https://github.com/Unicorn-Commander/The_Colonel.git
 cd The_Colonel
 
 # Set up virtual environment
