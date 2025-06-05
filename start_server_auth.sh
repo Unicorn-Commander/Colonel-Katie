@@ -7,7 +7,7 @@ if [ -f ".env" ]; then
 fi
 
 # Use environment variables or set defaults
-DEFAULT_PROFILE=${DEFAULT_PROFILE:-"gpt-4.1-mini.py"}
+DEFAULT_PROFILE=${DEFAULT_PROFILE:-"The_Colonel.py"}
 SERVER_HOST=${SERVER_HOST:-"0.0.0.0"}
 SERVER_PORT=${SERVER_PORT:-8264}
 

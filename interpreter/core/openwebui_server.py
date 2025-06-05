@@ -203,6 +203,7 @@ def create_openwebui_server(interpreter, host="localhost", port=8264, auth_token
             else:
                 messages.append({
                     "role": msg.role,
+                    "type": "message",  # Ensure all messages have a type
                     "content": msg.content
                 })
         
@@ -210,8 +211,13 @@ def create_openwebui_server(interpreter, host="localhost", port=8264, auth_token
         if system_message:
             interpreter.system_message = system_message
         
-        # Set interpreter messages
-        interpreter.messages = messages[:-1] if messages else []
+        # Clear previous messages and set new ones
+        interpreter.messages = []
+        if len(messages) > 1:
+            # Set conversation history (all but the last message)
+            interpreter.messages = messages[:-1]
+        
+        # Get the last message to process
         last_message = messages[-1]["content"] if messages else ""
         
         completion_id = f"chatcmpl-{uuid.uuid4().hex}"
@@ -225,57 +231,157 @@ def create_openwebui_server(interpreter, host="localhost", port=8264, auth_token
                 content_buffer = ""
                 try:
                     conversation_ended = False
-                    code_buffer = ""
-                    console_buffer = ""
                     in_code_block = False
                     in_console_block = False
                     
                     for chunk in interpreter.chat(last_message, stream=True, display=False):
-                        # Debug: Print chunk to understand structure
-                        print(f"🔍 Chunk received: {chunk}")
-                        
-                        # Skip chunks that don't have the expected structure
-                        if not isinstance(chunk, dict):
-                            print(f"⚠️ Skipping non-dict chunk: {chunk}")
-                            continue
-                        
-                        # Safe access to chunk type to prevent KeyError
+                        # Robust chunk processing to handle various formats
                         try:
-                            chunk_type = chunk["type"]
-                        except KeyError:
-                            print(f"⚠️ Skipping chunk without type: {chunk}")
-                            continue
-                        
-                        # Handle different types of chunks from The_Colonel
-                        if chunk_type == "message":
-                            if chunk.get("role") == "assistant" and "content" in chunk:
-                                try:
-                                    content_buffer += chunk["content"]
-                                    delta_data = {
-                                        'id': completion_id,
-                                        'object': 'chat.completion.chunk',
-                                        'created': created,
-                                        'model': request.model,
-                                        'choices': [{
-                                            'index': 0,
-                                            'delta': {'content': chunk["content"]},
-                                            'finish_reason': None
-                                        }]
-                                    }
-                                    yield f"data: {json.dumps(delta_data)}\n\n"
-                                except Exception as e:
-                                    print(f"⚠️ Error sending message chunk: {e}")
+                            # Debug logging
+                            print(f"🔍 Processing chunk: {type(chunk)} - {chunk}")
+                            
+                            # Handle different chunk types that can come from the interpreter
+                            if isinstance(chunk, dict):
+                                # Get chunk type safely, handle missing type field
+                                chunk_type = chunk.get("type", "unknown")
+                                chunk_role = chunk.get("role", "")
+                                chunk_content = chunk.get("content", "")
                                 
-                                if chunk.get("end"):
-                                    conversation_ended = True
-                                    break
-                        elif chunk_type == "code":
-                            # Accumulate code chunks
-                            if chunk.get("start"):
-                                in_code_block = True
-                                code_buffer = ""
-                                # Send code block start
-                                try:
+                                # Handle message chunks - primary text content
+                                if chunk_type == "message" and chunk_role == "assistant":
+                                    if chunk_content:
+                                        content_buffer += chunk_content
+                                        delta_data = {
+                                            'id': completion_id,
+                                            'object': 'chat.completion.chunk',
+                                            'created': created,
+                                            'model': request.model,
+                                            'choices': [{
+                                                'index': 0,
+                                                'delta': {'content': chunk_content},
+                                                'finish_reason': None
+                                            }]
+                                        }
+                                        yield f"data: {json.dumps(delta_data)}\n\n"
+                                    
+                                    # Check for conversation end
+                                    if chunk.get("end"):
+                                        conversation_ended = True
+                                        break
+                                
+                                # Handle code blocks
+                                elif chunk_type == "code":
+                                    if chunk.get("start"):
+                                        in_code_block = True
+                                        code_format = chunk.get("format", "python")
+                                        delta_data = {
+                                            'id': completion_id,
+                                            'object': 'chat.completion.chunk',
+                                            'created': created,
+                                            'model': request.model,
+                                            'choices': [{
+                                                'index': 0,
+                                                'delta': {'content': f"\n```{code_format}\n"},
+                                                'finish_reason': None
+                                            }]
+                                        }
+                                        yield f"data: {json.dumps(delta_data)}\n\n"
+                                    elif chunk_content and in_code_block:
+                                        delta_data = {
+                                            'id': completion_id,
+                                            'object': 'chat.completion.chunk',
+                                            'created': created,
+                                            'model': request.model,
+                                            'choices': [{
+                                                'index': 0,
+                                                'delta': {'content': chunk_content},
+                                                'finish_reason': None
+                                            }]
+                                        }
+                                        yield f"data: {json.dumps(delta_data)}\n\n"
+                                    elif chunk.get("end") and in_code_block:
+                                        in_code_block = False
+                                        delta_data = {
+                                            'id': completion_id,
+                                            'object': 'chat.completion.chunk',
+                                            'created': created,
+                                            'model': request.model,
+                                            'choices': [{
+                                                'index': 0,
+                                                'delta': {'content': "\n```\n"},
+                                                'finish_reason': None
+                                            }]
+                                        }
+                                        yield f"data: {json.dumps(delta_data)}\n\n"
+                                
+                                # Handle console output
+                                elif chunk_type == "console":
+                                    if chunk.get("start"):
+                                        in_console_block = True
+                                        delta_data = {
+                                            'id': completion_id,
+                                            'object': 'chat.completion.chunk',
+                                            'created': created,
+                                            'model': request.model,
+                                            'choices': [{
+                                                'index': 0,
+                                                'delta': {'content': "\nOutput:\n```\n"},
+                                                'finish_reason': None
+                                            }]
+                                        }
+                                        yield f"data: {json.dumps(delta_data)}\n\n"
+                                    elif chunk_content and in_console_block:
+                                        delta_data = {
+                                            'id': completion_id,
+                                            'object': 'chat.completion.chunk',
+                                            'created': created,
+                                            'model': request.model,
+                                            'choices': [{
+                                                'index': 0,
+                                                'delta': {'content': str(chunk_content)},
+                                                'finish_reason': None
+                                            }]
+                                        }
+                                        yield f"data: {json.dumps(delta_data)}\n\n"
+                                    elif chunk.get("end") and in_console_block:
+                                        in_console_block = False
+                                        delta_data = {
+                                            'id': completion_id,
+                                            'object': 'chat.completion.chunk',
+                                            'created': created,
+                                            'model': request.model,
+                                            'choices': [{
+                                                'index': 0,
+                                                'delta': {'content': "\n```\n"},
+                                                'finish_reason': None
+                                            }]
+                                        }
+                                        yield f"data: {json.dumps(delta_data)}\n\n"
+                                
+                                # Handle chunks that might not have a type but have content
+                                elif chunk_type == "unknown" and chunk_content:
+                                    # This handles edge cases where chunks come without proper type
+                                    if chunk_role == "assistant" or not chunk_role:
+                                        delta_data = {
+                                            'id': completion_id,
+                                            'object': 'chat.completion.chunk',
+                                            'created': created,
+                                            'model': request.model,
+                                            'choices': [{
+                                                'index': 0,
+                                                'delta': {'content': chunk_content},
+                                                'finish_reason': None
+                                            }]
+                                        }
+                                        yield f"data: {json.dumps(delta_data)}\n\n"
+                                
+                                # Skip chunks we don't recognize but log them
+                                elif chunk_type not in ["message", "code", "console", "confirmation", "active_line", "unknown"]:
+                                    print(f"⚠️ Unknown chunk type '{chunk_type}': {chunk}")
+                            
+                            elif isinstance(chunk, str):
+                                # Handle plain string chunks
+                                if chunk.strip():
                                     delta_data = {
                                         'id': completion_id,
                                         'object': 'chat.completion.chunk',
@@ -283,101 +389,20 @@ def create_openwebui_server(interpreter, host="localhost", port=8264, auth_token
                                         'model': request.model,
                                         'choices': [{
                                             'index': 0,
-                                            'delta': {'content': f"\n```{chunk.get('format', 'python')}\n"},
+                                            'delta': {'content': chunk},
                                             'finish_reason': None
                                         }]
                                     }
                                     yield f"data: {json.dumps(delta_data)}\n\n"
-                                except Exception as e:
-                                    print(f"⚠️ Error sending code start: {e}")
-                            elif "content" in chunk and in_code_block:
-                                code_buffer += chunk["content"]
-                                try:
-                                    delta_data = {
-                                        'id': completion_id,
-                                        'object': 'chat.completion.chunk',
-                                        'created': created,
-                                        'model': request.model,
-                                        'choices': [{
-                                            'index': 0,
-                                            'delta': {'content': chunk["content"]},
-                                            'finish_reason': None
-                                        }]
-                                    }
-                                    yield f"data: {json.dumps(delta_data)}\n\n"
-                                except Exception as e:
-                                    print(f"⚠️ Error sending code content: {e}")
-                            elif chunk.get("end") and in_code_block:
-                                in_code_block = False
-                                # Send code block end
-                                try:
-                                    delta_data = {
-                                        'id': completion_id,
-                                        'object': 'chat.completion.chunk',
-                                        'created': created,
-                                        'model': request.model,
-                                        'choices': [{
-                                            'index': 0,
-                                            'delta': {'content': "\n```\n"},
-                                            'finish_reason': None
-                                        }]
-                                    }
-                                    yield f"data: {json.dumps(delta_data)}\n\n"
-                                except Exception as e:
-                                    print(f"⚠️ Error sending code end: {e}")
-                        elif chunk_type == "console":
-                            # Handle console output chunks
-                            if chunk.get("start"):
-                                in_console_block = True
-                                console_buffer = ""
-                                try:
-                                    delta_data = {
-                                        'id': completion_id,
-                                        'object': 'chat.completion.chunk',
-                                        'created': created,
-                                        'model': request.model,
-                                        'choices': [{
-                                            'index': 0,
-                                            'delta': {'content': "\nOutput:\n```\n"},
-                                            'finish_reason': None
-                                        }]
-                                    }
-                                    yield f"data: {json.dumps(delta_data)}\n\n"
-                                except Exception as e:
-                                    print(f"⚠️ Error sending console start: {e}")
-                            elif "content" in chunk and in_console_block:
-                                try:
-                                    delta_data = {
-                                        'id': completion_id,
-                                        'object': 'chat.completion.chunk',
-                                        'created': created,
-                                        'model': request.model,
-                                        'choices': [{
-                                            'index': 0,
-                                            'delta': {'content': str(chunk["content"])},
-                                            'finish_reason': None
-                                        }]
-                                    }
-                                    yield f"data: {json.dumps(delta_data)}\n\n"
-                                except Exception as e:
-                                    print(f"⚠️ Error sending console content: {e}")
-                            elif chunk.get("end") and in_console_block:
-                                in_console_block = False
-                                try:
-                                    delta_data = {
-                                        'id': completion_id,
-                                        'object': 'chat.completion.chunk',
-                                        'created': created,
-                                        'model': request.model,
-                                        'choices': [{
-                                            'index': 0,
-                                            'delta': {'content': "\n```\n"},
-                                            'finish_reason': None
-                                        }]
-                                    }
-                                    yield f"data: {json.dumps(delta_data)}\n\n"
-                                except Exception as e:
-                                    print(f"⚠️ Error sending console end: {e}")
+                            
+                            else:
+                                # Handle any other unexpected types
+                                print(f"⚠️ Unexpected chunk format: {type(chunk)} - {chunk}")
+                        
+                        except Exception as chunk_error:
+                            print(f"⚠️ Error processing chunk: {chunk_error}")
+                            print(f"   Problematic chunk: {chunk}")
+                            # Continue processing other chunks
                     
                     # Always send final chunk to end the stream properly
                     if not conversation_ended:
@@ -416,27 +441,33 @@ def create_openwebui_server(interpreter, host="localhost", port=8264, auth_token
             try:
                 full_response = ""
                 for chunk in interpreter.chat(last_message, stream=True, display=False):
-                    # Debug: Print chunk to understand structure
-                    print(f"🔍 Non-streaming chunk: {chunk}")
-                    
-                    # Skip chunks that don't have the expected structure
-                    if not isinstance(chunk, dict):
-                        print(f"⚠️ Skipping non-dict chunk: {chunk}")
-                        continue
-                    
-                    # Safe access to chunk type to prevent KeyError
                     try:
-                        chunk_type = chunk["type"]
-                    except KeyError:
-                        print(f"⚠️ Skipping chunk without type: {chunk}")
-                        continue
+                        # Debug logging
+                        print(f"🔍 Non-streaming chunk: {type(chunk)} - {chunk}")
+                        
+                        if isinstance(chunk, dict):
+                            chunk_type = chunk.get("type", "unknown")
+                            chunk_role = chunk.get("role", "")
+                            chunk_content = chunk.get("content", "")
+                            
+                            if chunk_type == "message" and chunk_role == "assistant" and chunk_content:
+                                full_response += chunk_content
+                            elif chunk_type == "code" and chunk_content:
+                                code_format = chunk.get('format', 'python')
+                                full_response += f"\n```{code_format}\n{chunk_content}\n```\n"
+                            elif chunk_type == "console" and chunk_content:
+                                full_response += f"\nOutput:\n```\n{chunk_content}\n```\n"
+                            elif chunk_type == "unknown" and chunk_content:
+                                # Handle chunks without type but with content
+                                if chunk_role == "assistant" or not chunk_role:
+                                    full_response += chunk_content
+                        
+                        elif isinstance(chunk, str):
+                            full_response += chunk
                     
-                    if chunk_type == "message" and chunk.get("role") == "assistant" and "content" in chunk:
-                        full_response += chunk["content"]
-                    elif chunk_type == "code" and "content" in chunk:
-                        full_response += f"\n```{chunk.get('format', 'python')}\n{chunk['content']}\n```\n"
-                    elif chunk_type == "console" and "content" in chunk:
-                        full_response += f"\nOutput:\n```\n{chunk['content']}\n```\n"
+                    except Exception as chunk_error:
+                        print(f"⚠️ Error processing non-streaming chunk: {chunk_error}")
+                        continue
                 
                 response = ChatCompletionResponse(
                     id=completion_id,
@@ -461,12 +492,17 @@ def create_openwebui_server(interpreter, host="localhost", port=8264, auth_token
         """Execute Python code"""
         try:
             # Use interpreter's Python execution capability
+            # Save current state
+            saved_messages = interpreter.messages.copy()
             interpreter.messages = []
             result_chunks = []
             
             for chunk in interpreter.chat(f"```python\n{request.code}\n```", stream=True, display=False):
-                if chunk.get("type") == "console" and "content" in chunk:
+                if isinstance(chunk, dict) and chunk.get("type") == "console" and "content" in chunk:
                     result_chunks.append(chunk["content"])
+            
+            # Restore previous state
+            interpreter.messages = saved_messages
             
             output = "".join(result_chunks)
             return {"output": output, "error": None}
@@ -479,12 +515,17 @@ def create_openwebui_server(interpreter, host="localhost", port=8264, auth_token
         """Execute shell command"""
         try:
             # Use interpreter's shell execution capability
+            # Save current state
+            saved_messages = interpreter.messages.copy()
             interpreter.messages = []
             result_chunks = []
             
             for chunk in interpreter.chat(f"```bash\n{request.command}\n```", stream=True, display=False):
-                if chunk.get("type") == "console" and "content" in chunk:
+                if isinstance(chunk, dict) and chunk.get("type") == "console" and "content" in chunk:
                     result_chunks.append(chunk["content"])
+            
+            # Restore previous state
+            interpreter.messages = saved_messages
             
             output = "".join(result_chunks)
             return {"output": output, "error": None}

@@ -1,23 +1,28 @@
 # 🔥 The_Colonel
 
-**An enhanced Open Interpreter fork with Open WebUI integration**
+**An enhanced Open Interpreter fork with robust Open WebUI integration and advanced computer control capabilities**
 
 <p align="center">
     <a href="LICENSE"><img src="https://img.shields.io/static/v1?label=license&message=AGPL&color=white&style=flat" alt="License"/></a>
     <img src="https://img.shields.io/badge/Python-3.9+-blue.svg" alt="Python Version"/>
     <img src="https://img.shields.io/badge/Open%20WebUI-Compatible-green.svg" alt="Open WebUI Compatible"/>
+    <img src="https://img.shields.io/badge/Streaming-Responses-orange.svg" alt="Streaming Support"/>
+    <img src="https://img.shields.io/badge/Computer-Control-red.svg" alt="Computer Control"/>
 </p>
 
-The_Colonel is a powerful fork of Open Interpreter that brings enhanced capabilities and seamless Open WebUI integration. Built for power users who want both command-line flexibility and modern web interfaces.
+The_Colonel is a powerful, battle-tested fork of Open Interpreter designed for serious automation and AI-powered computer control. With comprehensive Open WebUI integration, advanced streaming capabilities, and robust error handling, it bridges the gap between conversational AI and practical system automation.
 
 ## ✨ Key Features
 
-- **🌐 Open WebUI Integration**: Full API server with OpenAI-compatible endpoints
-- **🛠️ Comprehensive Tool Suite**: 9+ endpoints covering code execution, file ops, and computer control
-- **👤 Profile System**: Easy configuration switching with profile support
-- **🔐 Flexible Authentication**: Local development without auth, remote access with tokens
-- **🖥️ Computer Control**: Direct mouse, keyboard, and screen interaction capabilities
-- **📁 Advanced File Operations**: Read, write, upload, and manage files seamlessly
+- **🌐 Seamless Open WebUI Integration**: Production-ready API server with OpenAI-compatible streaming endpoints
+- **🛠️ Comprehensive Tool Arsenal**: 12+ specialized endpoints for code execution, file operations, and computer control
+- **🖥️ Advanced Computer Control**: Direct mouse/keyboard interaction, screenshots, and window management
+- **📁 Intelligent File Management**: Advanced file operations with upload/download capabilities
+- **👤 Dynamic Profile System**: Hot-swappable configurations for different AI models and use cases
+- **🔐 Enterprise-Ready Security**: Bearer token authentication with localhost development mode
+- **⚡ Optimized Streaming**: Robust chunk processing with real-time response streaming
+- **🔧 Error-Resilient Architecture**: Advanced error handling and recovery mechanisms
+- **📋 OpenAPI 3.1 Specification**: Full API documentation with tagged tool categorization
 
 ## 🚀 Quick Start
 
@@ -50,12 +55,21 @@ interpreter --openwebui_server --host localhost --port 8264
 
 **With Custom Profile:**
 ```bash
-interpreter --openwebui_server --profile gpt-4.1-mini.py
+interpreter --openwebui_server --profile The_Colonel.py
 ```
 
 **Remote Access with Authentication:**
 ```bash
 interpreter --openwebui_server --host 0.0.0.0 --port 8264 --auth_token your_secure_token
+```
+
+**Quick Start Scripts:**
+```bash
+# Local development (no authentication)
+./start_server.sh
+
+# Remote access with authentication
+./start_server_auth.sh
 ```
 
 ## 🔧 Open WebUI Integration
@@ -97,7 +111,7 @@ interpreter --openwebui_server --host 0.0.0.0 --port 8264 --auth_token your_secu
 
 Use the `profile` query parameter to select different configurations:
 ```bash
-curl -X POST "http://localhost:8264/v1/chat/completions?profile=fast" \
+curl -X POST "http://localhost:8264/v1/chat/completions?profile=The_Colonel" \
   -H "Content-Type: application/json" \
   -d '{"messages": [{"role": "user", "content": "Hello"}]}'
 ```
@@ -172,6 +186,124 @@ interpreter.computer.import_computer_api = True
 Use with:
 ```bash
 interpreter --profile my_profile.py
+```
+
+## ⚡ Streaming & Performance
+
+### Robust Chunk Processing
+
+The_Colonel features advanced streaming response handling that properly processes various chunk formats from the interpreter:
+
+- **Error-Resilient**: Individual chunk processing errors don't crash the entire conversation
+- **Format-Agnostic**: Handles dictionary chunks, string chunks, and malformed data gracefully  
+- **Type-Safe**: Uses `.get()` methods instead of direct key access to prevent KeyErrors
+- **Debug-Friendly**: Comprehensive logging for troubleshooting chunk processing issues
+
+### Technical Architecture
+
+**Streaming Response Flow:**
+1. OpenAI-compatible request received
+2. Profile configuration loaded dynamically
+3. Messages converted to interpreter format
+4. Interpreter streams chunks in real-time
+5. Chunks processed through robust error handling
+6. Server-Sent Events formatted for Open WebUI
+7. Real-time display in web interface
+
+## 🛠️ Troubleshooting
+
+### Common Issues
+
+**1. API Key Authentication Errors**
+```bash
+# Check your API key is set correctly
+echo $OPENAI_API_KEY
+
+# Update .env file if needed
+nano .env
+```
+
+**2. Streaming Response Issues** 
+- "Error: 'type'" on second messages → Fixed with improved message state management
+- Messages appear in terminal but not GUI → Resolved with proper SSE formatting
+- KeyError 'type' exceptions → Handled with robust chunk processing
+
+**3. Profile Loading Problems**
+```bash
+# Clear Python cache if profiles aren't reloading
+find . -name "*.pyc" -delete
+find . -name "__pycache__" -type d -exec rm -rf {} +
+```
+
+**4. Port Already in Use**
+```bash
+# Find and kill process using port 8264
+lsof -ti:8264 | xargs kill -9
+```
+
+### Debug Mode
+
+Enable detailed logging:
+```bash
+interpreter --openwebui_server --verbose
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+Copy `.env.example` to `.env` and configure your settings:
+
+```bash
+cp .env.example .env
+# Edit with your actual API keys and settings
+```
+
+```env
+# API Keys
+OPENAI_API_KEY=your_openai_key_here
+ANTHROPIC_API_KEY=your_anthropic_key_here
+XAI_API_KEY=your_xai_key_here
+DEEPSEEK_API_KEY=your_deepseek_key_here
+
+# Server Configuration  
+DEFAULT_PROFILE=The_Colonel.py
+SERVER_HOST=0.0.0.0
+SERVER_PORT=8264
+AUTH_TOKEN=your_secure_random_token
+
+# General Settings
+DISABLE_TELEMETRY=true
+AUTO_RUN=false
+SAFE_MODE=off
+```
+
+### Profile Customization
+
+Advanced profile example with environment-based API key:
+
+```python
+# custom_profile.py
+import os
+from interpreter import interpreter
+
+# Model Configuration
+interpreter.llm.model = "gpt-4o-mini"
+interpreter.llm.api_key = os.getenv("OPENAI_API_KEY")
+interpreter.llm.temperature = 0.1
+interpreter.llm.context_window = 128000
+interpreter.llm.max_tokens = 16384
+
+# Capabilities
+interpreter.auto_run = True
+interpreter.os = True
+interpreter.computer.import_computer_api = True
+
+# Custom instructions for better computer control
+interpreter.custom_instructions = """
+When taking screenshots, if you encounter errors with pywinctl, 
+try using computer.display.screenshot(active_app_only=False) instead.
+"""
 ```
 
 ## 🔨 Development
