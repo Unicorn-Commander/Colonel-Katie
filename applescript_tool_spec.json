@@ -1,0 +1,56 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AppleScript Automation Tool",
+    "description": "macOS automation using AppleScript for The_Colonel",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000/applescript"
+    }
+  ],
+  "paths": {
+    "/execute": {
+      "post": {
+        "summary": "Execute AppleScript code",
+        "description": "Run AppleScript for macOS automation",
+        "operationId": "execute_applescript",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "description": "AppleScript code to execute"
+                  }
+                },
+                "required": ["code"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "AppleScript executed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {"type": "string"},
+                    "output": {"type": "string"},
+                    "error": {"type": "string", "nullable": true}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

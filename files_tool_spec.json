@@ -1,0 +1,113 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "File Operations",
+    "version": "1.0.0",
+    "description": "Read, write, and manage files"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8264/files"
+    }
+  ],
+  "paths": {
+    "/read": {
+      "post": {
+        "operationId": "read_file_content",
+        "summary": "Read File",
+        "description": "Read the contents of a file",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "Path to the file to read"
+                  }
+                },
+                "required": ["path"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File contents",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "string",
+                      "description": "File contents"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Error message if read failed"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/write": {
+      "post": {
+        "operationId": "write_file_content",
+        "summary": "Write File",
+        "description": "Write content to a file",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "Path to the file to write"
+                  },
+                  "content": {
+                    "type": "string",
+                    "description": "Content to write to the file"
+                  }
+                },
+                "required": ["path", "content"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Write result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "description": "Whether the write was successful"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Error message if write failed"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

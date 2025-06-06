@@ -1,0 +1,154 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Computer Control",
+    "version": "1.0.0",
+    "description": "Control mouse, keyboard, and screen capture"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8264/computer"
+    }
+  ],
+  "paths": {
+    "/screenshot": {
+      "post": {
+        "operationId": "take_screenshot",
+        "summary": "Take Screenshot",
+        "description": "Capture a screenshot of the current screen",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Screenshot result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "output": {
+                      "type": "string",
+                      "description": "Screenshot data or path"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Error message if screenshot failed"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/click": {
+      "post": {
+        "operationId": "mouse_click",
+        "summary": "Mouse Click",
+        "description": "Click at specific coordinates",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "integer",
+                    "description": "X coordinate to click"
+                  },
+                  "y": {
+                    "type": "integer",
+                    "description": "Y coordinate to click"
+                  }
+                },
+                "required": ["x", "y"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Click result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "output": {
+                      "type": "string",
+                      "description": "Click operation result"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Error message if click failed"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/type": {
+      "post": {
+        "operationId": "keyboard_type",
+        "summary": "Type Text",
+        "description": "Type text at the current cursor position",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "description": "Text to type"
+                  }
+                },
+                "required": ["text"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Type result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "output": {
+                      "type": "string",
+                      "description": "Type operation result"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Error message if typing failed"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

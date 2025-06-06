@@ -1,0 +1,62 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Shell Command Executor",
+    "version": "1.0.0",
+    "description": "Execute shell/bash commands"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8264/shell"
+    }
+  ],
+  "paths": {
+    "/execute": {
+      "post": {
+        "operationId": "execute_shell_command",
+        "summary": "Execute Shell Command",
+        "description": "Execute shell/bash commands and return the output",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "command": {
+                    "type": "string",
+                    "description": "Shell command to execute"
+                  }
+                },
+                "required": ["command"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Command execution result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "output": {
+                      "type": "string",
+                      "description": "Command output"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Error message if command failed"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

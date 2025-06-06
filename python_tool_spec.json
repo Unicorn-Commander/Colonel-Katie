@@ -1,0 +1,62 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Python Code Executor",
+    "version": "1.0.0",
+    "description": "Execute Python code with full interpreter capabilities"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8264/python"
+    }
+  ],
+  "paths": {
+    "/execute": {
+      "post": {
+        "operationId": "execute_python_code",
+        "summary": "Execute Python Code",
+        "description": "Execute Python code and return the output",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "description": "Python code to execute"
+                  }
+                },
+                "required": ["code"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Execution result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "output": {
+                      "type": "string",
+                      "description": "Code execution output"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Error message if execution failed"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

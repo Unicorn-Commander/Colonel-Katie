@@ -1,0 +1,101 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Clipboard Operations Tool",
+    "description": "Cross-platform clipboard management for The_Colonel",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000/clipboard"
+    }
+  ],
+  "paths": {
+    "/read": {
+      "get": {
+        "summary": "Read clipboard content",
+        "description": "Get the current content of the clipboard",
+        "operationId": "read_clipboard",
+        "responses": {
+          "200": {
+            "description": "Clipboard content retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {"type": "string"},
+                    "content": {"type": "string", "description": "Current clipboard content"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/write": {
+      "post": {
+        "summary": "Write to clipboard",
+        "description": "Copy text to the clipboard",
+        "operationId": "write_clipboard",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "description": "Text to copy to clipboard"
+                  }
+                },
+                "required": ["text"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Text copied to clipboard successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {"type": "string"},
+                    "message": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/paste": {
+      "post": {
+        "summary": "Paste clipboard content",
+        "description": "Paste the current clipboard content using keyboard shortcut",
+        "operationId": "paste_clipboard",
+        "responses": {
+          "200": {
+            "description": "Clipboard content pasted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {"type": "string"},
+                    "message": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

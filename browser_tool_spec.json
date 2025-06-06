@@ -1,0 +1,279 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Browser Automation Tool",
+    "description": "Selenium-based web browser automation for The_Colonel",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000/browser"
+    }
+  ],
+  "paths": {
+    "/navigate": {
+      "post": {
+        "summary": "Navigate to a URL",
+        "description": "Navigate the browser to a specified URL",
+        "operationId": "navigate_to_url",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "The URL to navigate to"
+                  }
+                },
+                "required": ["url"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Navigation successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {"type": "string"},
+                    "url": {"type": "string"},
+                    "title": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/click": {
+      "post": {
+        "summary": "Click an element",
+        "description": "Click on a web element using various selectors",
+        "operationId": "click_element",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector, XPath, or text to identify the element"
+                  },
+                  "selector_type": {
+                    "type": "string",
+                    "enum": ["css", "xpath", "text", "id", "class"],
+                    "default": "css",
+                    "description": "Type of selector to use"
+                  }
+                },
+                "required": ["selector"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Element clicked successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {"type": "string"},
+                    "message": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fill": {
+      "post": {
+        "summary": "Fill a form field",
+        "description": "Fill text into an input field or textarea",
+        "operationId": "fill_field",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector to identify the input field"
+                  },
+                  "text": {
+                    "type": "string",
+                    "description": "Text to fill into the field"
+                  },
+                  "clear_first": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether to clear the field before filling"
+                  }
+                },
+                "required": ["selector", "text"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Field filled successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {"type": "string"},
+                    "message": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/extract": {
+      "post": {
+        "summary": "Extract content from page",
+        "description": "Extract text, HTML, or attributes from web elements",
+        "operationId": "extract_content",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "selector": {
+                    "type": "string",
+                    "description": "CSS selector to identify elements (optional for page content)"
+                  },
+                  "extract_type": {
+                    "type": "string",
+                    "enum": ["text", "html", "attribute", "page_source"],
+                    "default": "text",
+                    "description": "Type of content to extract"
+                  },
+                  "attribute": {
+                    "type": "string",
+                    "description": "Attribute name when extract_type is 'attribute'"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Content extracted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {"type": "string"},
+                    "content": {"type": "string"},
+                    "elements_found": {"type": "integer"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search": {
+      "post": {
+        "summary": "Search the web",
+        "description": "Perform a web search using Google and return results",
+        "operationId": "web_search",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "description": "Search query"
+                  },
+                  "max_results": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "Maximum number of results to return"
+                  }
+                },
+                "required": ["query"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Search completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {"type": "string"},
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "title": {"type": "string"},
+                          "url": {"type": "string"},
+                          "description": {"type": "string"}
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/screenshot": {
+      "post": {
+        "summary": "Take a browser screenshot",
+        "description": "Take a screenshot of the current browser window",
+        "operationId": "browser_screenshot",
+        "responses": {
+          "200": {
+            "description": "Screenshot taken successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {"type": "string"},
+                    "screenshot": {"type": "string", "description": "Base64 encoded screenshot"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

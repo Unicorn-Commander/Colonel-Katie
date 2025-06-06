@@ -1,0 +1,56 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "R Programming Tool",
+    "description": "R statistical computing and data analysis for The_Colonel",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000/r"
+    }
+  ],
+  "paths": {
+    "/execute": {
+      "post": {
+        "summary": "Execute R code",
+        "description": "Run R code for statistical computing and data analysis",
+        "operationId": "execute_r",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "description": "R code to execute"
+                  }
+                },
+                "required": ["code"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "R code executed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {"type": "string"},
+                    "output": {"type": "string"},
+                    "error": {"type": "string", "nullable": true}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

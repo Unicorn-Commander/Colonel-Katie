@@ -1,0 +1,386 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "The_Colonel Tools",
+    "description": "Individual automation tools for code execution, file operations, and computer control",
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8264",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/v1/tools/execute/python": {
+      "post": {
+        "summary": "Python Code Executor",
+        "description": "Execute Python code with full interpreter capabilities",
+        "operationId": "python_executor",
+        "x-openai-isConsequential": false,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "description": "Python code to execute"
+                  }
+                },
+                "required": ["code"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Execution result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "output": {
+                      "type": "string"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tools/execute/shell": {
+      "post": {
+        "summary": "Shell Command Executor",
+        "description": "Execute shell/bash commands",
+        "operationId": "shell_executor",
+        "x-openai-isConsequential": false,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "command": {
+                    "type": "string",
+                    "description": "Shell command to execute"
+                  }
+                },
+                "required": ["command"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Command result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "output": {
+                      "type": "string"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tools/files/read": {
+      "post": {
+        "summary": "File Reader",
+        "description": "Read contents of any file",
+        "operationId": "file_reader",
+        "x-openai-isConsequential": false,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "File path to read"
+                  }
+                },
+                "required": ["path"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File contents",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "string"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tools/files/write": {
+      "post": {
+        "summary": "File Writer",
+        "description": "Write or create files",
+        "operationId": "file_writer",
+        "x-openai-isConsequential": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "description": "File path to write to"
+                  },
+                  "content": {
+                    "type": "string",
+                    "description": "Content to write"
+                  }
+                },
+                "required": ["path", "content"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Write result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tools/computer/screenshot": {
+      "post": {
+        "summary": "Screenshot Capture",
+        "description": "Take a screenshot of the desktop",
+        "operationId": "screenshot_capture",
+        "x-openai-isConsequential": false,
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Screenshot result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "output": {
+                      "type": "string"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tools/computer/click": {
+      "post": {
+        "summary": "Mouse Click",
+        "description": "Click at screen coordinates",
+        "operationId": "mouse_click",
+        "x-openai-isConsequential": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "integer",
+                    "description": "X coordinate"
+                  },
+                  "y": {
+                    "type": "integer",
+                    "description": "Y coordinate"
+                  }
+                },
+                "required": ["x", "y"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Click result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "output": {
+                      "type": "string"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tools/computer/type": {
+      "post": {
+        "summary": "Keyboard Input",
+        "description": "Type text input",
+        "operationId": "keyboard_input",
+        "x-openai-isConsequential": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "description": "Text to type"
+                  }
+                },
+                "required": ["text"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Type result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "output": {
+                      "type": "string"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/tools/computer/key": {
+      "post": {
+        "summary": "Key Press",
+        "description": "Send key presses and shortcuts",
+        "operationId": "key_press",
+        "x-openai-isConsequential": true,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "description": "Key or combination to press"
+                  }
+                },
+                "required": ["key"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Key press result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "output": {
+                      "type": "string"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

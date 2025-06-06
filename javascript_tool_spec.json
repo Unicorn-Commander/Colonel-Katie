@@ -1,0 +1,56 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "JavaScript Execution Tool",
+    "description": "Node.js JavaScript code execution for The_Colonel",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000/javascript"
+    }
+  ],
+  "paths": {
+    "/execute": {
+      "post": {
+        "summary": "Execute JavaScript code",
+        "description": "Run JavaScript code using Node.js",
+        "operationId": "execute_javascript",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "description": "JavaScript code to execute"
+                  }
+                },
+                "required": ["code"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JavaScript code executed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {"type": "string"},
+                    "output": {"type": "string"},
+                    "error": {"type": "string", "nullable": true}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

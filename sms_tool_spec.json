@@ -1,0 +1,117 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SMS/Messages Tool",
+    "description": "macOS SMS and iMessage operations for The_Colonel",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000/sms"
+    }
+  ],
+  "paths": {
+    "/send": {
+      "post": {
+        "summary": "Send SMS/iMessage",
+        "description": "Send an SMS or iMessage to a contact (macOS only)",
+        "operationId": "send_message",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "to": {
+                    "type": "string",
+                    "description": "Phone number or contact name to send message to"
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "Message content to send"
+                  }
+                },
+                "required": ["to", "message"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {"type": "string"},
+                    "message": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/get": {
+      "post": {
+        "summary": "Get messages",
+        "description": "Retrieve SMS/iMessage history (macOS only)",
+        "operationId": "get_messages",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "contact": {
+                    "type": "string",
+                    "description": "Filter messages from specific contact"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "Maximum number of messages to retrieve"
+                  },
+                  "substring": {
+                    "type": "string",
+                    "description": "Filter messages containing this substring"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Messages retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {"type": "string"},
+                    "messages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "date": {"type": "string"},
+                          "from": {"type": "string"},
+                          "text": {"type": "string"}
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

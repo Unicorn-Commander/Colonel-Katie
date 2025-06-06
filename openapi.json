@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "The_Colonel API",
-    "description": "API for The_Colonel as a chat endpoint and tool server in Open WebUI",
+    "title": "The_Colonel Tool Server",
+    "description": "Individual tools for code execution, file operations, and computer control",
     "version": "0.1.0"
   },
   "servers": [
@@ -135,10 +135,10 @@
     },
     "/v1/tools/execute/python": {
       "post": {
-        "summary": "Execute Python Code",
-        "description": "Execute Python code locally and return the output",
-        "operationId": "execute_python",
-        "tags": ["Python Execution"],
+        "summary": "Python Code Executor",
+        "description": "Execute Python code locally with full interpreter capabilities and return the output",
+        "operationId": "python_executor",
+        "tags": ["Code Execution", "Python"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -199,10 +199,10 @@
     },
     "/v1/tools/execute/shell": {
       "post": {
-        "summary": "Execute Shell Command",
-        "description": "Execute a shell command locally and return the output",
-        "operationId": "execute_shell",
-        "tags": ["Shell Execution"],
+        "summary": "Shell Command Executor",
+        "description": "Execute shell/bash commands locally and return the output",
+        "operationId": "shell_executor",
+        "tags": ["Code Execution", "Shell"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -263,10 +263,10 @@
     },
     "/v1/tools/files/read": {
       "post": {
-        "summary": "Read File",
-        "description": "Read the contents of a file at the specified path",
-        "operationId": "read_file",
-        "tags": ["File Operations"],
+        "summary": "File Reader",
+        "description": "Read the contents of any file from the local filesystem",
+        "operationId": "file_reader",
+        "tags": ["File Management"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -327,10 +327,10 @@
     },
     "/v1/tools/files/write": {
       "post": {
-        "summary": "Write File",
-        "description": "Write content to a file at the specified path",
-        "operationId": "write_file",
-        "tags": ["File Operations"],
+        "summary": "File Writer",
+        "description": "Write or create files with specified content to the local filesystem",
+        "operationId": "file_writer",
+        "tags": ["File Management"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -395,10 +395,10 @@
     },
     "/v1/tools/files/upload": {
       "post": {
-        "summary": "Upload File",
-        "description": "Upload a file and return its metadata",
-        "operationId": "upload_file",
-        "tags": ["File Operations"],
+        "summary": "File Uploader",
+        "description": "Upload files to the server and get metadata including file paths",
+        "operationId": "file_uploader",
+        "tags": ["File Management"],
         "requestBody": {
           "content": {
             "multipart/form-data": {
@@ -468,10 +468,10 @@
     },
     "/v1/tools/computer/screenshot": {
       "post": {
-        "summary": "Take Screenshot",
-        "description": "Take a screenshot of the current screen",
-        "operationId": "take_screenshot",
-        "tags": ["Computer Control"],
+        "summary": "Screenshot Capture",
+        "description": "Capture a screenshot of the current desktop or active window",
+        "operationId": "screenshot_capture",
+        "tags": ["Automation", "Computer Control"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -516,10 +516,10 @@
     },
     "/v1/tools/computer/click": {
       "post": {
-        "summary": "Click at Coordinates",
-        "description": "Click at specific screen coordinates",
-        "operationId": "click_coordinate",
-        "tags": ["Computer Control"],
+        "summary": "Mouse Click",
+        "description": "Perform mouse clicks at specific screen coordinates for automation",
+        "operationId": "mouse_click",
+        "tags": ["Automation", "Computer Control"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -574,10 +574,10 @@
     },
     "/v1/tools/computer/type": {
       "post": {
-        "summary": "Type Text",
-        "description": "Type text at current cursor position",
-        "operationId": "type_text",
-        "tags": ["Computer Control"],
+        "summary": "Keyboard Input",
+        "description": "Send keyboard text input to the currently focused application",
+        "operationId": "keyboard_input",
+        "tags": ["Automation", "Computer Control"],
         "requestBody": {
           "content": {
             "application/json": {
@@ -628,10 +628,10 @@
     },
     "/v1/tools/computer/key": {
       "post": {
-        "summary": "Press Key",
-        "description": "Press a key or key combination",
-        "operationId": "press_key",
-        "tags": ["Computer Control"],
+        "summary": "Key Press",
+        "description": "Send key presses and keyboard shortcuts to the system",
+        "operationId": "key_press",
+        "tags": ["Automation", "Computer Control"],
         "requestBody": {
           "content": {
             "application/json": {

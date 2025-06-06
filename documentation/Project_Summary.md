@@ -7,7 +7,7 @@ The_Colonel is a sophisticated fork of Open Interpreter that provides seamless i
 
 ### Core Features ✅
 - **OpenAI-Compatible Chat Endpoint**: Full `/v1/chat/completions` implementation with streaming support
-- **Comprehensive Tool Suite**: 12+ specialized endpoints for code execution, file operations, and computer control
+- **Individual Tool Servers**: 4 specialized tool servers for focused functionality
 - **Dynamic Profile System**: Hot-swappable configuration profiles with environment-based API key management
 - **Enterprise Security**: Bearer token authentication for remote access, localhost development mode
 - **Robust Error Handling**: Advanced chunk processing with graceful error recovery
@@ -22,24 +22,38 @@ The_Colonel is a sophisticated fork of Open Interpreter that provides seamless i
 - Comprehensive error logging and recovery
 - CORS enabled for cross-origin requests
 
-**Endpoints Implemented:**
+**Individual Tool Servers:**
 ```
+Python Code Executor:
+- Server: /python/*
+- OpenAPI: /python/openapi.json
+- Endpoint: POST /python/execute
+
+Shell Command Executor:
+- Server: /shell/*
+- OpenAPI: /shell/openapi.json
+- Endpoint: POST /shell/execute
+
+File Operations:
+- Server: /files/*
+- OpenAPI: /files/openapi.json
+- Endpoints: POST /files/read, POST /files/write
+
+Computer Control:
+- Server: /computer/*
+- OpenAPI: /computer/openapi.json
+- Endpoints: POST /computer/screenshot, POST /computer/click, POST /computer/type
+
 Chat Endpoints:
 - GET  /v1/models                    # Model enumeration for Open WebUI
 - POST /v1/chat/completions          # Streaming chat with profile support
 
-Tool Endpoints:
-- POST /v1/tools/execute/python      # Python code execution
-- POST /v1/tools/execute/shell       # Shell command execution
-- POST /v1/tools/files/read          # File content reading
-- POST /v1/tools/files/write         # File content writing
-- POST /v1/tools/files/upload        # File upload handling
-
-Computer Control:
-- POST /v1/tools/computer/screenshot # Screen capture
-- POST /v1/tools/computer/click      # Mouse click automation
-- POST /v1/tools/computer/type       # Keyboard text input
-- POST /v1/tools/computer/key        # Key press automation
+Legacy Tool Endpoints:
+- POST /v1/tools/execute/python      # Legacy Python execution
+- POST /v1/tools/execute/shell       # Legacy shell execution
+- POST /v1/tools/files/read          # Legacy file reading
+- POST /v1/tools/files/write         # Legacy file writing
+- POST /v1/tools/computer/*          # Legacy computer control
 
 Documentation:
 - GET  /openapi.json                 # Complete API specification
@@ -175,9 +189,16 @@ The_Colonel/
 - Error handling robust
 - OpenAPI specification complete
 
-### Recently Fixed ✅
+### Recently Added ✅
+- **Individual Tool Servers** → 4 separate tool servers for better Open WebUI integration
+- **Tool-Specific OpenAPI Specs** → Each tool has its own focused specification
+- **Better Tool Discovery** → Clear separation of Python, Shell, Files, and Computer tools
+- **Improved Documentation** → Comprehensive Tool Reference Guide with examples
+- **Enhanced Tool Organization** → Clean tool paths and focused functionality
+
+### Previously Fixed ✅
 - "Error: 'type'" on second messages → Fixed with improved message state management and chunk processing
-- Environment variable integration → All profiles now use .env configuration
+- Environment variable integration → All profiles now use .env configuration  
 - Profile naming consistency → Renamed to The_Colonel.py as default profile
 
 ### Next Steps 🚀
