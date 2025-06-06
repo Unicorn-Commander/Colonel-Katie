@@ -13,6 +13,8 @@ class Files:
         """
         Search the filesystem for the given query.
         """
+        # Temporary fix for file search
+        from . import aifs
         return aifs.search(*args, **kwargs)
 
     def edit(self, path, original_text, replacement_text):

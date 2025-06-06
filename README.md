@@ -74,42 +74,51 @@ interpreter --openwebui_server --host 0.0.0.0 --port 8264 --auth_token your_secu
 
 ## 🔧 Open WebUI Integration
 
-### Server Endpoints
+### Individual Tool Servers
 
-**Chat Endpoint:**
-- `POST /v1/chat/completions` - OpenAI-compatible chat with profile selection
+The_Colonel provides **4 specialized tool servers** that can be added individually to Open WebUI:
 
-**Code Execution Tools:**
-- `POST /v1/tools/execute/python` - Execute Python code
-- `POST /v1/tools/execute/shell` - Execute shell commands
+**🐍 Python Code Executor:**
+- Server: `http://your-ip:8264/python`
+- OpenAPI: `http://your-ip:8264/python/openapi.json`
+- Execute Python code, data analysis, calculations
 
-**File Management Tools:**
-- `POST /v1/tools/files/read` - Read file contents
-- `POST /v1/tools/files/write` - Write file contents  
-- `POST /v1/tools/files/upload` - Upload files
+**🔧 Shell Command Executor:**
+- Server: `http://your-ip:8264/shell` 
+- OpenAPI: `http://your-ip:8264/shell/openapi.json`
+- Run bash/shell commands, system operations
 
-**Computer Control Tools:**
-- `POST /v1/tools/computer/screenshot` - Take screenshots
-- `POST /v1/tools/computer/click` - Click at coordinates
-- `POST /v1/tools/computer/type` - Type text
-- `POST /v1/tools/computer/key` - Press keys
+**📁 File Operations:**
+- Server: `http://your-ip:8264/files`
+- OpenAPI: `http://your-ip:8264/files/openapi.json`
+- Read, write, and manage files
 
-**API Documentation:**
-- `GET /openapi.json` - Complete OpenAPI specification
+**🖥️ Computer Control:**
+- Server: `http://your-ip:8264/computer`
+- OpenAPI: `http://your-ip:8264/computer/openapi.json`
+- Screenshots, mouse clicks, keyboard input
+
+### Legacy Endpoints
+- `GET /openapi.json` - Complete API specification
+- `POST /v1/chat/completions` - OpenAI-compatible chat endpoint
 
 ### Open WebUI Configuration
 
 **LLM Connection:**
 - Base URL: `http://localhost:8264/v1`
-- Model: `the-colonel` (or any name)
+- Model: `the-colonel`
 
-**Tool Server:**
-- Base URL: `http://localhost:8264`
-- OpenAPI JSON: Use the served specification at `/openapi.json`
+**Individual Tool Setup:**
+Add each tool separately to Open WebUI with:
+- Tool Server URL: `http://your-ip:8264/{tool-name}`
+- API Key: `your-auth-token`
+- OpenAPI JSON: `http://your-ip:8264/{tool-name}/openapi.json`
+
+**📖 Complete Tool Documentation:** See [Tool Reference Guide](documentation/Tool_Reference.md) for detailed setup instructions, examples, and usage patterns.
 
 ### Profile Selection
 
-Use the `profile` query parameter to select different configurations:
+Use the `profile` query parameter for chat completions:
 ```bash
 curl -X POST "http://localhost:8264/v1/chat/completions?profile=The_Colonel" \
   -H "Content-Type: application/json" \
@@ -348,8 +357,10 @@ curl http://localhost:8264/openapi.json
 
 ## 📖 Documentation
 
-- **[Setup Guide](documentation/Task_Checklist-The_Colonel.md)** - Complete installation and configuration
-- **[Project Plan](documentation/Project_Plan-The_Colonel.md)** - Technical implementation details
+- **[Tool Reference Guide](documentation/Tool_Reference.md)** - Complete tool documentation with examples
+- **[Technical Implementation Guide](documentation/Technical_Implementation_Guide.md)** - Architecture and technical details
+- **[Project Summary](documentation/Project_Summary.md)** - Project overview and current status
+- **[Setup Guide](documentation/Task_Checklist-The_Colonel.md)** - Installation and configuration
 - **[OpenAPI Spec](openapi.json)** - Complete API documentation
 
 ## 🏗️ Based on Open Interpreter
