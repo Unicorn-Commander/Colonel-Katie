@@ -4,6 +4,7 @@
 - [ ] Work with Mintlify to translate docs. How does Mintlify let us translate our documentation automatically? I know there's a way.
 - [ ] Better comments throughout the package (they're like docs for contributors)
 - [ ] Show how to replace interpreter.llm so you can use a custom llm
+- [ ] Document the need for further development of LLM-driven memory extraction (e.g., categorization, confidence scores).
 
 ## New features
 - [ ] Figure out how to get OI to answer to user input requests like python's `input()`. Do we somehow detect a delay in the output..? Is there some universal flag that TUIs emit when they expect user input? Should we do this semantically with embeddings, then ask OI to review it and respond..?
@@ -29,6 +30,44 @@
 - [ ] Expand "safe mode" to have proper, simple Docker support, or maybe Cosmopolitan LibC
 - [ ] Make it so core can be run elsewhere from terminal package — perhaps split over HTTP (this would make docker easier too)
 - [ ] For OS mode, experiment with screenshot just returning active window, experiment with it just showing the changes, or showing changes in addition to the whole thing, etc. GAIA should be your guide
+
+## GUI Development (Current Focus)
+- [x] Implement LLM-driven memory extraction (basic)
+- [x] Implement conversation loading from history
+- [x] Develop right sidebar functionality (current session details)
+- [x] Add collapsible categories to right sidebar
+- [x] Refine `chat_window.py` for robust display of loaded conversation history and streaming output
+- [x] Successfully pulled `gemma3n` model into Ollama Docker container.
+
+## GUI Development (Future Roadmap)
+
+## Web GUI Development (Future Roadmap)
+- [ ] **Initial Web Interface:** Develop a basic web-based chat interface that leverages the existing backend (interpreter, memory, etc.).
+- [ ] **Feature Parity Evaluation:** Systematically evaluate which desktop GUI features can be realistically and efficiently ported to the web, prioritizing core chat and settings.
+- [ ] **Real-time Communication:** Implement WebSockets for real-time streaming of interpreter output to the web frontend.
+- [ ] **Authentication & Session Management:** Secure the web interface with proper user authentication and session handling.
+- [ ] **Deployment Strategy:** Document recommended deployment strategies for the web GUI (e.g., Docker, cloud platforms).
+
+- [ ] **Advanced Memory Extraction:** Implement more sophisticated LLM-driven memory extraction, including categorization (e.g., "user preference", "technical detail", "goal") and confidence scores.
+- [ ] **Agent Management:**
+    - [ ] Interact with different agents (running in background, status updates).
+    - [ ] Enable conversations with multiple agents, allowing them to communicate amongst themselves to achieve goals or ask questions.
+    - [ ] Develop a GUI for building agent profiles, providing a visual editor for options instead of raw Python/YAML files.
+- [ ] **Prompt Libraries:**
+    - [ ] Integrate local prompt templates.
+    - [ ] Allow users to search and select prompt templates to download and create new templates from.
+- [ ] **Quick Interaction Interface:** Implement a minimal popup text input (like KRunner, ChatGPT desktop app, Open-WebUI desktop) for immediate interaction via keyboard shortcuts. This would complement the full GUI.
+- [ ] **Right Sidebar Enhancements:**
+    - [ ] Implement full functionality for all planned sections.
+    - [ ] Allow collapsing/expanding of each category to reduce visual clutter.
+
+## Custom File Indexing & Embedding System
+- [x] Initial FileIndexer class with directory scanning, content extraction, embedding, and semantic memory storage.
+- [x] Integration of FileIndexer into OpenInterpreter.
+- [ ] Implement a GUI trigger for indexing (e.g., a button in the right sidebar).
+- [ ] Implement a mechanism to update the index (e.g., detect file changes, periodic re-indexing).
+- [ ] Refine content extraction for different file types (e.g., parse code for functions/classes, extract key sections from documentation).
+- [ ] Optimize indexing for large directories (e.g., incremental indexing, parallel processing).
 
 ## Future-proofing
 
@@ -69,7 +108,7 @@ This roadmap gets pretty rough from here. More like working notes.
 
 # Working Notes
 
-## \* Roughly, how to build `computer.browser`:
+## * Roughly, how to build `computer.browser`:
 
 First I think we should have a part, like `computer.browser.ask(query)` which just hits up [perplexity](https://www.perplexity.ai/) for fast answers to questions.
 

@@ -14,6 +14,9 @@ The_Colonel is a powerful, battle-tested fork of Open Interpreter designed for s
 
 ## ✨ Key Features
 
+- **🧠 Adaptive Memory System**: Persistent, LLM-driven memory for personalized and contextual interactions.
+- **🖥️ Modern Desktop GUI**: A sleek, PySide6-based graphical interface for intuitive control and interaction.
+- **🗃️ Custom File Indexing**: Intelligent indexing and embedding of local files for project-aware AI assistance.
 - **🌐 Seamless Open WebUI Integration**: Production-ready API server with OpenAI-compatible streaming endpoints
 - **🛠️ Comprehensive Tool Arsenal**: 12+ specialized endpoints for code execution, file operations, and computer control
 - **🖥️ Advanced Computer Control**: Direct mouse/keyboard interaction, screenshots, and window management
@@ -46,6 +49,11 @@ pip install -e .
 **Traditional Terminal Interface:**
 ```bash
 interpreter
+```
+
+**Graphical User Interface (GUI):**
+```bash
+poetry run colonel-gui
 ```
 
 **Open WebUI Server Mode:**

@@ -127,6 +127,7 @@ async def sampling_loop(
     """
     tool_collection = ToolCollection(
         ComputerTool(),
+        KdeTool(),
         # BashTool(),
         # EditTool(),
     )

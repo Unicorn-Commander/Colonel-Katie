@@ -18,6 +18,8 @@ from .default_system_message import default_system_message
 from .llm.llm import Llm
 from .respond import respond
 from .utils.telemetry import send_telemetry
+from ..memory import MemoryManager
+from ..file_indexing import FileIndexer
 from .utils.truncate_output import truncate_output
 
 
@@ -80,11 +82,18 @@ class OpenInterpreter:
         multi_line=True,
         contribute_conversation=False,
         plain_text_display=False,
+        memory_backend='sqlite_chroma',
     ):
         # State
         self.messages = [] if messages is None else messages
         self.responding = False
         self.last_messages_count = 0
+
+        # Memory
+        self.memory = MemoryManager(backend=memory_backend)
+
+        # File Indexer
+        self.file_indexer = FileIndexer(self)
 
         # Settings
         self.offline = offline
@@ -256,11 +265,19 @@ class OpenInterpreter:
             #             )
 
             # This is where it all happens!
+
+            # Retrieve relevant memories
+            if len(self.messages) > 0:
+                last_message = self.messages[-1]["content"]
+                recalled_memories = self.memory.search_semantic_memory(self.llm.embed(last_message), top_k=3)
+                if recalled_memories:
+                    self.messages.insert(-1, {"role": "system", "type": "message", "content": "Relevant memories:\n" + "\n".join(recalled_memories)})
+
             yield from self._respond_and_store()
 
             # Save conversation if we've turned conversation_history on
             if self.conversation_history:
-                # If it's the first message, set the conversation name
+                # If it's a new conversation, set the conversation name
                 if not self.conversation_filename:
                     first_few_words_list = self.messages[0]["content"][:25].split(" ")
                     if (
@@ -269,7 +286,7 @@ class OpenInterpreter:
                         first_few_words = "_".join(first_few_words_list[:-1])
                     else:  # for languages like Chinese without blank between words
                         first_few_words = self.messages[0]["content"][:15]
-                    for char in '<>:"/\\|?*!\n':  # Invalid characters for filenames
+                    for char in '<>:":/\\|?*!\n':  # Invalid characters for filenames
                         first_few_words = first_few_words.replace(char, "")
 
                     date = datetime.now().strftime("%B_%d_%Y_%H-%M-%S")
@@ -288,6 +305,25 @@ class OpenInterpreter:
                     "w",
                 ) as f:
                     json.dump(self.messages, f)
+
+            # Extract and save memories
+            if len(self.messages) > 1:
+                # Only extract memories from the last user-assistant exchange
+                last_user_message_index = -1
+                for i in range(len(self.messages) - 1, -1, -1):
+                    if self.messages[i]["role"] == "user":
+                        last_user_message_index = i
+                        break
+                
+                if last_user_message_index != -1:
+                    # Get all messages from the last user message to the end
+                    last_exchange_messages = self.messages[last_user_message_index:]
+                    last_exchange_content = "\n".join([m["content"] for m in last_exchange_messages if "content" in m])
+                    
+                    extracted_memories = self.llm.extract_memories(last_exchange_content)
+                    for memory in extracted_memories:
+                        self.memory.add_semantic_memory(memory, self.llm.embed(memory))
+
             return
 
         raise Exception(
@@ -443,3 +479,6 @@ class OpenInterpreter:
     def get_oi_dir(self):
         # Again, just handy for start_script in profiles.
         return oi_dir
+
+    def index_files(self, directory_path, extensions=None):
+        self.file_indexer.index_directory(directory_path, extensions)

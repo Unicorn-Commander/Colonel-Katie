@@ -16,6 +16,7 @@ import uuid
 
 import requests
 import tokentrim as tt
+from sentence_transformers import SentenceTransformer
 
 from .run_text_llm import run_text_llm
 
@@ -72,6 +73,8 @@ class Llm:
 
         # Budget manager powered by LiteLLM
         self.max_budget = None
+
+        self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
 
     def run(self, messages):
         """
@@ -413,7 +416,39 @@ Continuing...
                 pass
 
 
+    def embed(self, text):
+        return self.embedding_model.encode(text).tolist()
+
+    def extract_memories(self, text):
+        # Use the LLM to extract key facts from the text.
+        # This is a basic implementation and can be improved with more sophisticated prompting.
+        prompt = f"""From the following conversation snippet, extract key facts, user preferences, or important information that should be remembered for future interactions. List each extracted memory on a new line.
+
+Conversation:
+{text}
+
+Extracted Memories:"""
+        
+        # Create a temporary message list for the LLM call
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant that extracts key information from conversations."},
+            {"role": "user", "content": prompt}
+        ]
+
+        # Make the LLM call
+        response_chunks = self.run(messages)
+        extracted_text = ""
+        for chunk in response_chunks:
+            if isinstance(chunk, dict) and "content" in chunk:
+                extracted_text += chunk["content"]
+
+        # Split the extracted text into individual memories
+        memories = [m.strip() for m in extracted_text.split('\n') if m.strip()]
+        return memories
+
+
 def fixed_litellm_completions(**params):
+
     """
     Just uses a dummy API key, since we use litellm without an API key sometimes.
     Hopefully they will fix this!

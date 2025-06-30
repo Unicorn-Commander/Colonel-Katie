@@ -276,6 +276,29 @@ llm:
 
 </CodeGroup>
 
+### Memory Backend
+
+Specifies which memory backend to use. The default is `sqlite_chroma`.
+
+* `sqlite_chroma`: Uses SQLite for structured memory and ChromaDB for semantic memory. This is the default and is recommended for most users.
+* `postgres_qdrant`: Uses PostgreSQL for structured memory and Qdrant for semantic memory. This is recommended for users who want to use a more robust, server-based memory solution.
+
+<CodeGroup>
+
+```bash Terminal
+interpreter --memory-backend postgres_qdrant
+```
+
+```python Python
+interpreter.memory_backend = 'postgres_qdrant'
+```
+
+```yaml Profile
+memory_backend: postgres_qdrant
+```
+
+</CodeGroup>
+
 # Interpreter
 
 ### Vision Mode

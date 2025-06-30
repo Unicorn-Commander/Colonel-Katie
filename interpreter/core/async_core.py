@@ -18,24 +18,20 @@ from .core import OpenInterpreter
 
 last_start_time = 0
 
-try:
-    import janus
-    import uvicorn
-    from fastapi import (
-        APIRouter,
-        FastAPI,
-        File,
-        Form,
-        HTTPException,
-        Request,
-        UploadFile,
-        WebSocket,
-    )
-    from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
-    from starlette.status import HTTP_403_FORBIDDEN
-except:
-    # Server dependencies are not required by the main package.
-    pass
+import janus
+import uvicorn
+from fastapi import (
+    APIRouter,
+    FastAPI,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    UploadFile,
+    WebSocket,
+)
+from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
+from starlette.status import HTTP_403_FORBIDDEN
 
 
 complete_message = {"role": "server", "type": "status", "content": "complete"}

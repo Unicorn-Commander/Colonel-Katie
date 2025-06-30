@@ -195,6 +195,13 @@ def start_terminal_interface(interpreter):
             "attribute": {"object": interpreter, "attr_name": "debug"},
         },
         {
+            "name": "memory_backend",
+            "nickname": "mb",
+            "help_text": "which memory backend to use. can be sqlite_chroma or postgres_qdrant",
+            "type": str,
+            "attribute": {"object": interpreter, "attr_name": "memory_backend"},
+        },
+        {
             "name": "fast",
             "nickname": "f",
             "help_text": "runs `interpreter --model gpt-4o-mini` and asks OI to be extremely concise (shortcut for `interpreter --profile fast`)",
