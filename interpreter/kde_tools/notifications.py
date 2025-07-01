@@ -1,6 +1,6 @@
 
 from PySide6.QtDBus import QDBusConnection, QDBusMessage
-from PySide6.QtCore import QCoreApplication, QVariant
+from PySide6.QtCore import QCoreApplication
 
 def _get_dbus_connection():
     app = QCoreApplication.instance()

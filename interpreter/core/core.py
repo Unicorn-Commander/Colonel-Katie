@@ -8,11 +8,6 @@ import threading
 import time
 from datetime import datetime
 
-from ..terminal_interface.local_setup import local_setup
-from ..terminal_interface.terminal_interface import terminal_interface
-from ..terminal_interface.utils.display_markdown_message import display_markdown_message
-from ..terminal_interface.utils.local_storage_path import get_storage_path
-from ..terminal_interface.utils.oi_dir import oi_dir
 from .computer.computer import Computer
 from .default_system_message import default_system_message
 from .llm.llm import Llm
@@ -21,6 +16,7 @@ from .utils.telemetry import send_telemetry
 from ..memory import MemoryManager
 from ..file_indexing import FileIndexer
 from .utils.truncate_output import truncate_output
+from ..terminal_interface.utils.local_storage_path import get_storage_path
 
 
 class OpenInterpreter:
@@ -92,9 +88,6 @@ class OpenInterpreter:
         # Memory
         self.memory = MemoryManager(backend=memory_backend)
 
-        # File Indexer
-        self.file_indexer = FileIndexer(self)
-
         # Settings
         self.offline = offline
         self.auto_run = auto_run
@@ -119,6 +112,9 @@ class OpenInterpreter:
         self.conversation_history = conversation_history
         self.conversation_filename = conversation_filename
         self.conversation_history_path = conversation_history_path
+
+        # File Indexer (needs conversation_history_path to be set first)
+        self.file_indexer = FileIndexer(self)
 
         # OS control mode related attributes
         self.os = os

@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Memory System:**
     - Implemented a flexible memory system with `BaseMemoryBackend` interface.
     - Added `SQLiteChromaBackend` for structured and semantic memory (using SQLite and custom vector store).
-    - Added `PostgresQdrantBackend` for structured and semantic memory (using PostgreSQL and Qdrant).
+    - Added `PostgreSQL/Qdrant Backend`: Developed `PostgresQdrantBackend` for scalable structured and semantic memory, integrating with PostgreSQL and Qdrant.
     - Integrated `MemoryManager` into `OpenInterpreter` for persistent, adaptive memory.
     - Implemented basic LLM-driven memory extraction in `Llm.extract_memories`.
 - **Graphical User Interface (GUI):**
@@ -32,10 +32,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `numpy` compatibility addressed by replacing `chromadb` with a custom SQLite vector store.
 - `profiles_dialog.py` updated to correctly reference `chat_window.output_display`.
 - `interpreter/core/core.py` updated for robust conversation saving and memory extraction logic.
+- Moved `kde_tools` directory into `interpreter/kde_tools` for proper package structure.
+- Refactored `interpreter/api/server.py` to integrate server logic (from `async_core.py`) and use the `Server` class.
+- Modified `interpreter/core/computer/computer.py` to use absolute imports for `interpreter.kde_tools.wrappers`.
+- Refactored `interpreter/__init__.py` to remove direct `OpenInterpreter` instantiation and `--os` logic, resolving circular imports.
 
 ### Fixed
 - `AttributeError: 'ColonelKDEApp' object has no attribute 'output_display'` in `profiles_dialog.py`.
 - `NameError: name 'QLabel' is not defined` in `main_window.py`.
+- Resolved `ModuleNotFoundError: No module named 'interpreter.kde_tools'` by moving `kde_tools` into `interpreter/`.
+- Resolved `ImportError: cannot import name 'QVariant' from 'PySide6.QtCore'` by removing `QVariant` import from `kde_tools` modules.
+- Resolved `ModuleNotFoundError: No module named 'inquirer'` by ensuring `uvicorn` runs in the correct virtual environment.
+- Resolved `ModuleNotFoundError: No module named 'sentence_transformers'` by installing the package.
+- Resolved `ModuleNotFoundError: No module named 'psycopg2'` by installing `psycopg2-binary`.
+- Resolved `ModuleNotFoundError: No module named 'qdrant_client'` by installing the package.
+- Resolved `ImportError: cannot import name 'interpreter' from partially initialized module 'interpreter'` by refactoring `interpreter/__init__.py` and decoupling `async_core.py`.
+
+## [2.0.1] - 2025-07-01 - Critical Server Fixes
+
+### Fixed - Circular Import Resolution
+- **Circular Import in computer.py**: Fixed absolute import `from interpreter.kde_tools.wrappers` to use relative import `from ...kde_tools.wrappers`
+- **Circular Import in file_indexing**: Removed unnecessary `from interpreter import interpreter` import causing circular dependency
+- **Missing get_storage_path import**: Added proper import for `get_storage_path` from terminal interface utils in core.py
+- **Initialization Order Issue**: Fixed FileIndexer initialization to occur after conversation_history_path is set in OpenInterpreter constructor
+- **Missing Import Path**: Fixed lazy_import path from `.utils.lazy_import` to `..core.utils.lazy_import` in server.py
+- **Missing Return Statement**: Added `return app` at the end of create_colonel_katie_server function
+- **Empty async_core.py**: Deleted problematic empty file that was causing circular import issues
+
+### Added - Dependency Management
+- **Required Dependencies**: Added installation instructions for `sentence_transformers`, `psycopg2-binary`, `qdrant-client`, `fastapi`, `uvicorn`, `python-multipart`
+- **Platform Support**: Added `platformdirs` dependency for cross-platform storage path management
+
+### Changed - Server Architecture
+- **Server Function**: create_colonel_katie_server now properly returns FastAPI app instance
+- **Import Structure**: Cleaned up import paths to prevent circular dependencies
+- **Initialization Logic**: Reorganized OpenInterpreter initialization order for proper dependency resolution
+
+### Verified - Server Functionality ✅
+- **Server Startup**: FastAPI server now starts successfully on port 8000
+- **API Endpoints**: OpenAPI specification endpoint responding correctly (HTTP 200)
+- **Import Resolution**: All modules import successfully without circular dependency errors
+- **Error Handling**: Robust error handling maintained throughout fix process
+
+### Removed
+- `AsyncInterpreter` class and server-related logic from `interpreter/core/async_core.py` (file is now empty).
 
 ## [2.0.0] - 2025-06-30 - KDE6 Integration Complete
 

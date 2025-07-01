@@ -58,17 +58,22 @@ poetry run colonel-gui
 
 **Open WebUI Server Mode:**
 ```bash
-interpreter --openwebui_server --host localhost --port 8264
+python -m interpreter.api.main
 ```
 
-**With Custom Profile:**
+**With Custom Configuration:**
 ```bash
-interpreter --openwebui_server --profile The_Colonel.py
+# Set environment variables in .env file
+OPENAI_API_KEY=your_key_here
+DEFAULT_PROFILE=The_Colonel.py
+SERVER_PORT=8000
+
+python -m interpreter.api.main
 ```
 
-**Remote Access with Authentication:**
+**Direct uvicorn Usage:**
 ```bash
-interpreter --openwebui_server --host 0.0.0.0 --port 8264 --auth_token your_secure_token
+uvicorn interpreter.api.main:app --host 0.0.0.0 --port 8000
 ```
 
 **Quick Start Scripts:**
@@ -87,23 +92,23 @@ interpreter --openwebui_server --host 0.0.0.0 --port 8264 --auth_token your_secu
 The_Colonel provides **4 specialized tool servers** that can be added individually to Open WebUI:
 
 **🐍 Python Code Executor:**
-- Server: `http://your-ip:8264/python`
-- OpenAPI: `http://your-ip:8264/python/openapi.json`
+- Server: `http://your-ip:8000/python`
+- OpenAPI: `http://your-ip:8000/python/openapi.json`
 - Execute Python code, data analysis, calculations
 
 **🔧 Shell Command Executor:**
-- Server: `http://your-ip:8264/shell` 
-- OpenAPI: `http://your-ip:8264/shell/openapi.json`
+- Server: `http://your-ip:8000/shell` 
+- OpenAPI: `http://your-ip:8000/shell/openapi.json`
 - Run bash/shell commands, system operations
 
 **📁 File Operations:**
-- Server: `http://your-ip:8264/files`
-- OpenAPI: `http://your-ip:8264/files/openapi.json`
+- Server: `http://your-ip:8000/files`
+- OpenAPI: `http://your-ip:8000/files/openapi.json`
 - Read, write, and manage files
 
 **🖥️ Computer Control:**
-- Server: `http://your-ip:8264/computer`
-- OpenAPI: `http://your-ip:8264/computer/openapi.json`
+- Server: `http://your-ip:8000/computer`
+- OpenAPI: `http://your-ip:8000/computer/openapi.json`
 - Screenshots, mouse clicks, keyboard input
 
 ### Legacy Endpoints
@@ -113,14 +118,14 @@ The_Colonel provides **4 specialized tool servers** that can be added individual
 ### Open WebUI Configuration
 
 **LLM Connection:**
-- Base URL: `http://localhost:8264/v1`
+- Base URL: `http://localhost:8000/v1`
 - Model: `the-colonel`
 
 **Individual Tool Setup:**
 Add each tool separately to Open WebUI with:
-- Tool Server URL: `http://your-ip:8264/{tool-name}`
-- API Key: `your-auth-token`
-- OpenAPI JSON: `http://your-ip:8264/{tool-name}/openapi.json`
+- Tool Server URL: `http://your-ip:8000/{tool-name}`
+- API Key: `your-auth-token` (not required for localhost)
+- OpenAPI JSON: `http://your-ip:8000/{tool-name}/openapi.json`
 
 **📖 Complete Tool Documentation:** See [Tool Reference Guide](documentation/Tool_Reference.md) for detailed setup instructions, examples, and usage patterns.
 
@@ -128,7 +133,7 @@ Add each tool separately to Open WebUI with:
 
 Use the `profile` query parameter for chat completions:
 ```bash
-curl -X POST "http://localhost:8264/v1/chat/completions?profile=The_Colonel" \
+curl -X POST "http://localhost:8000/v1/chat/completions?profile=The_Colonel" \
   -H "Content-Type: application/json" \
   -d '{"messages": [{"role": "user", "content": "Hello"}]}'
 ```
@@ -254,8 +259,8 @@ find . -name "__pycache__" -type d -exec rm -rf {} +
 
 **4. Port Already in Use**
 ```bash
-# Find and kill process using port 8264
-lsof -ti:8264 | xargs kill -9
+# Find and kill process using port 8000
+lsof -ti:8000 | xargs kill -9
 ```
 
 ### Debug Mode
@@ -286,7 +291,7 @@ DEEPSEEK_API_KEY=your_deepseek_key_here
 # Server Configuration  
 DEFAULT_PROFILE=The_Colonel.py
 SERVER_HOST=0.0.0.0
-SERVER_PORT=8264
+SERVER_PORT=8000
 AUTH_TOKEN=your_secure_random_token
 
 # General Settings
@@ -354,13 +359,13 @@ The_Colonel/
 ```bash
 # Test server functionality
 source venv/bin/activate
-python -c "from interpreter.core.openwebui_server import create_openwebui_server; print('✅ Server tests passed')"
+python -c "from interpreter.api.server import create_colonel_katie_server; print('✅ Server tests passed')"
 
 # Start test server
-interpreter --openwebui_server --host localhost --port 8264
+python -m interpreter.api.main
 
 # Test endpoints
-curl http://localhost:8264/openapi.json
+curl http://localhost:8000/openapi.json
 ```
 
 ## 📖 Documentation

@@ -17,6 +17,7 @@ from .skills.skills import Skills
 from .sms.sms import SMS
 from .terminal.terminal import Terminal
 from .vision.vision import Vision
+from ...kde_tools.wrappers import KDEClipboardWrapper, KDEFileOperationsWrapper, KDENotificationsWrapper, KDEPlasmaShellWrapper, KDEVirtualDesktopsWrapper, KDEWindowsWrapper
 
 
 class Computer:
@@ -44,6 +45,14 @@ class Computer:
         self.docs = Docs(self)
         self.ai = Ai(self)
         self.files = Files(self)
+
+        # KDE Tools
+        self.kde_clipboard = KDEClipboardWrapper(self)
+        self.kde_file_operations = KDEFileOperationsWrapper(self)
+        self.kde_notifications = KDENotificationsWrapper(self)
+        self.kde_plasma_shell = KDEPlasmaShellWrapper(self)
+        self.kde_virtual_desktops = KDEVirtualDesktopsWrapper(self)
+        self.kde_windows = KDEWindowsWrapper(self)
 
         self.emit_images = True
         self.api_base = "https://api.openinterpreter.com/v0"
@@ -102,6 +111,18 @@ Do not import the computer module, or any of its sub-modules. They are already i
             self.docs,
             self.ai,
             self.files,
+            self.kde_clipboard,
+            self.kde_file_operations,
+            self.kde_notifications,
+            self.kde_plasma_shell,
+            self.kde_virtual_desktops,
+            self.kde_windows,
+            self.kde_clipboard,
+            self.kde_file_operations,
+            self.kde_notifications,
+            self.kde_plasma_shell,
+            self.kde_virtual_desktops,
+            self.kde_windows,
         ]
 
     def _get_all_computer_tools_signature_and_description(self):

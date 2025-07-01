@@ -2,7 +2,6 @@
 import os
 import json
 from datetime import datetime
-from interpreter import interpreter # Assuming interpreter instance is available globally or passed
 
 class FileIndexer:
     def __init__(self, interpreter_instance):
