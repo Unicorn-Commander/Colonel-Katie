@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=The Colonel
+GenericName=AI Assistant
+Comment=Advanced AI Assistant with GUI - The Colonel
+Exec=/home/ucadmin/Development/Colonel-Katie/launch_colonel.sh
+Icon=/home/ucadmin/Development/Colonel-Katie/The_Colonel.png
+Terminal=false
+Categories=Development;Utility;Office;
+Keywords=AI;Assistant;OpenAI;Chat;Colonel;
+StartupNotify=true
+StartupWMClass=The Colonel - Unicorn Commander
+MimeType=text/plain;

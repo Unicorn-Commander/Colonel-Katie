@@ -224,9 +224,7 @@ class OpenInterpreter:
         # Display mode actually runs interpreter.chat(display=False, stream=True) from within the terminal_interface.
         # wraps the vanilla .chat(display=False) generator in a display.
         # Quite different from the plain generator stuff. So redirect to that
-        if display:
-            yield from terminal_interface(self, message)
-            return
+        
 
         # One-off message
         if message or message == "":
@@ -322,9 +320,7 @@ class OpenInterpreter:
 
             return
 
-        raise Exception(
-            "`interpreter.chat()` requires a display. Set `display=True` or pass a message into `interpreter.chat(message)`."
-        )
+        yield from self._respond_and_store()
 
     def _respond_and_store(self):
         """

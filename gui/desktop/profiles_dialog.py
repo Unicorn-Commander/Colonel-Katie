@@ -17,6 +17,7 @@ class ProfilesDialog(QDialog):
 
         self.set_default_button = QPushButton("Set as Default Profile")
         self.set_default_button.clicked.connect(self.set_default_profile)
+        self.set_default_button.setToolTip("Set the selected profile as the default for new sessions.")
         self.layout.addWidget(self.set_default_button)
 
         self.load_profiles()
