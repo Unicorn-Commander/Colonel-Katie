@@ -2,7 +2,7 @@
 import os
 from PySide6.QtWidgets import QDialog, QFormLayout, QLabel, QLineEdit, QCheckBox, QPushButton, QComboBox, QTabWidget, QWidget, QVBoxLayout, QFileDialog
 from PySide6.QtCore import Qt, Signal
-from services.settings_manager import SettingsManager
+from .services.settings_manager import SettingsManager
 
 class SettingsDialog(QDialog):
     settings_saved = Signal()

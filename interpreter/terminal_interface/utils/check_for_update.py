@@ -1,4 +1,4 @@
-import pkg_resources
+import importlib.metadata
 import requests
 from packaging import version
 
@@ -10,8 +10,8 @@ def check_for_update():
 
     # Get the current version using pkg_resources
     try:
-        current_version = pkg_resources.get_distribution("open-interpreter").version
-    except pkg_resources.DistributionNotFound:
+        current_version = importlib.metadata.version("open-interpreter")
+    except importlib.metadata.PackageNotFoundError:
         current_version = "0.4.3-the-colonel"
 
     return version.parse(latest_version) > version.parse(current_version)

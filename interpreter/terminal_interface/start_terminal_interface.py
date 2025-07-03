@@ -3,7 +3,7 @@ import os
 import sys
 import time
 
-import pkg_resources
+import importlib.metadata
 
 from interpreter.terminal_interface.contributing_conversations import (
     contribute_conversation_launch_logic,
@@ -443,8 +443,8 @@ Use """ to write multi-line messages.
 
     if args.version:
         try:
-            version = pkg_resources.get_distribution("open-interpreter").version
-        except pkg_resources.DistributionNotFound:
+            version = importlib.metadata.version("open-interpreter")
+        except importlib.metadata.PackageNotFoundError:
             version = "0.4.3-the-colonel"  # Fallback version for development
         update_name = "The_Colonel"  # Change this with each major update
         print(f"The_Colonel {version} {update_name}")

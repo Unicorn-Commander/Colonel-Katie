@@ -18,13 +18,13 @@ mkdir -p "$APPS_DIR"
 ICONS_DIR="$HOME/.local/share/icons"
 mkdir -p "$ICONS_DIR"
 
-# Copy icon to user icons directory
-if [[ -f "$CURRENT_DIR/The_Colonel.png" ]]; then
+# Copy Colonel Katie icon to user icons directory
+if [[ -f "$CURRENT_DIR/colonel-katie-icon.png" ]]; then
+    cp "$CURRENT_DIR/colonel-katie-icon.png" "$ICONS_DIR/"
+    echo "✅ Colonel Katie icon copied to $ICONS_DIR"
+elif [[ -f "$CURRENT_DIR/The_Colonel.png" ]]; then
     cp "$CURRENT_DIR/The_Colonel.png" "$ICONS_DIR/"
-    echo "✅ Icon copied to $ICONS_DIR"
-elif [[ -f "$CURRENT_DIR/unicorn.svg" ]]; then
-    cp "$CURRENT_DIR/unicorn.svg" "$ICONS_DIR/"
-    echo "✅ Icon copied to $ICONS_DIR"
+    echo "✅ Fallback icon copied to $ICONS_DIR"
 else
     echo "⚠️  No icon found, using default"
 fi
@@ -53,14 +53,15 @@ if command -v gtk-update-icon-cache &> /dev/null; then
 fi
 
 echo ""
-echo "🎉 The Colonel has been installed!"
+echo "🎉 Colonel Katie has been installed!"
 echo ""
 echo "You can now:"
-echo "  • Find 'The Colonel' in your KDE Application Launcher"
-echo "  • Search for 'Colonel' or 'AI Assistant' in KRunner (Alt+Space)"
-echo "  • Pin it to your taskbar or desktop"
+echo "  • Find 'Colonel Katie' in your KDE Application Launcher"
+echo "  • Search for 'Colonel Katie' or 'AI Assistant' in KRunner (Alt+Space)"
+echo "  • Pin her to your taskbar or desktop"
+echo "  • Right-click system tray icon for quick access"
 echo ""
 echo "To uninstall, simply delete:"
 echo "  • $APPS_DIR/the-colonel.desktop"
-echo "  • $ICONS_DIR/The_Colonel.png (or unicorn.svg)"
+echo "  • $ICONS_DIR/colonel-katie-icon.png"
 echo ""

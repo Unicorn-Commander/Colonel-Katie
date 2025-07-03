@@ -2,24 +2,26 @@
 import os
 import json
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QTextEdit, QLineEdit, QPushButton, QMenuBar, QSplitter, QLabel, QSystemTrayIcon
-from PySide6.QtGui import QTextCharFormat, QTextCursor, QColor, QFont, QAction, QIcon
+from PySide6.QtGui import QTextCharFormat, QTextCursor, QColor, QFont, QAction, QIcon, QKeySequence
 from PySide6.QtWidgets import QMenu
 from PySide6.QtCore import Qt
 from interpreter import OpenInterpreter
 from dotenv import load_dotenv
 
-from feature_toggles import is_feature_enabled, ENABLE_RAG, ENABLE_MANY_MODELS_CONVERSATIONS
-from modern_theme import MODERN_STYLESHEET
+from .feature_toggles import is_feature_enabled, ENABLE_RAG, ENABLE_MANY_MODELS_CONVERSATIONS
+from .modern_theme import MODERN_STYLESHEET
 
-from settings_dialog import SettingsDialog
-from profiles_dialog import ProfilesDialog
-from conversation_history import ConversationHistory
-from chat_window import ChatWindow
-from worker import InterpreterWorker, IndexingWorker
-from right_sidebar import RightSidebar
-from services.model_manager import ModelManager
-from services.chat_manager import ChatManager
-from services.global_config import GlobalConfig
+from .settings_dialog import SettingsDialog
+from .profiles_dialog import ProfilesDialog
+from .conversation_history import ConversationHistory
+from .chat_window import ChatWindow
+from .worker import InterpreterWorker, IndexingWorker
+from .right_sidebar import RightSidebar
+from .services.model_manager import ModelManager
+from .services.chat_manager import ChatManager
+from .services.global_config import GlobalConfig
+from .agent_builder_dialog import AgentBuilderDialog
+from .components.model_selector import ModelSelector
 
 load_dotenv()
 
@@ -32,16 +34,16 @@ class ColonelKDEApp(QMainWindow):
         self.model_manager = ModelManager()
         self.chat_manager = ChatManager(self.model_manager, self.interpreter)
         
-        self.setWindowTitle("The Colonel - Unicorn Commander")
+        self.setWindowTitle("Colonel Katie (LtCol Katie) - AI Assistant")
         self.setMinimumSize(800, 600) # Set minimum window size
         self.setGeometry(100, 100, 1200, 800) # Increased size for three columns
-        self.setWindowIcon(QIcon("/home/ucadmin/Development/Colonel-Katie/unicorn.svg"))
+        self.setWindowIcon(QIcon("/home/ucadmin/Development/Colonel-Katie/colonel-katie-icon.png"))
 
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
         self.main_layout = QHBoxLayout(self.central_widget)
-        self.main_layout.setContentsMargins(10, 10, 10, 10)
-        self.main_layout.setSpacing(10)
+        self.main_layout.setContentsMargins(15, 15, 15, 15)
+        self.main_layout.setSpacing(15)
 
         # Use QSplitter for resizable sections
         self.splitter = QSplitter(Qt.Horizontal)
@@ -95,17 +97,40 @@ class ColonelKDEApp(QMainWindow):
         else:
             print("RAG feature is disabled.")
 
-        # System Tray Icon
+        # System Tray Icon - Colonel Katie
         self.tray_icon = QSystemTrayIcon(self)
-        self.tray_icon.setIcon(self.windowIcon()) # Use the application icon
-        self.tray_icon.setToolTip("The Colonel - Unicorn Commander")
+        katie_icon = QIcon(os.path.join(os.path.dirname(__file__), "..", "..", "colonel-katie-icon.png"))
+        self.tray_icon.setIcon(katie_icon)
+        self.tray_icon.setToolTip("Colonel Katie (LtCol Katie) - Your AI Assistant")
 
         tray_menu = QMenu()
-        show_hide_action = QAction("Show/Hide", self)
+        
+        # Main actions
+        show_hide_action = QAction("Show/Hide Colonel Katie", self)
         show_hide_action.triggered.connect(self.toggle_visibility)
         tray_menu.addAction(show_hide_action)
-
-        quit_action = QAction("Quit", self)
+        
+        # Quick Chat action (for future implementation)
+        quick_chat_action = QAction("Quick Chat (Ctrl+Space)", self)
+        quick_chat_action.setEnabled(False)  # Placeholder for now
+        tray_menu.addAction(quick_chat_action)
+        
+        tray_menu.addSeparator()
+        
+        # Settings
+        settings_action = QAction("Settings", self)
+        settings_action.triggered.connect(self.show_settings)
+        tray_menu.addAction(settings_action)
+        
+        tray_menu.addSeparator()
+        
+        # About
+        about_action = QAction("About Colonel Katie", self)
+        about_action.triggered.connect(self.show_about_dialog)
+        tray_menu.addAction(about_action)
+        
+        # Quit
+        quit_action = QAction("Quit Colonel Katie", self)
         quit_action.triggered.connect(self.close)
         tray_menu.addAction(quit_action)
 
@@ -119,6 +144,27 @@ class ColonelKDEApp(QMainWindow):
             self.show()
             self.raise_()
             self.activateWindow()
+    
+    def show_about_dialog(self):
+        from PySide6.QtWidgets import QMessageBox
+        about = QMessageBox(self)
+        about.setWindowTitle("About Colonel Katie")
+        about.setTextFormat(Qt.RichText)
+        about.setText("""
+        <h2>Colonel Katie (LtCol Katie)</h2>
+        <p><b>Your Personal AI Assistant</b></p>
+        <p>A powerful AI assistant built on The Colonel codebase with advanced features:</p>
+        <ul>
+        <li>Multi-model conversations</li>
+        <li>RAG document processing</li>
+        <li>Web search integration</li>
+        <li>Quick chat overlay (Ctrl+Space)</li>
+        <li>System tray integration</li>
+        </ul>
+        <p><i>Serving you with honor and efficiency!</i> 🦄⚡</p>
+        """)
+        about.setStandardButtons(QMessageBox.Ok)
+        about.exec()
 
     def create_menu_bar(self):
         menu_bar = self.menuBar()
@@ -128,20 +174,19 @@ class ColonelKDEApp(QMainWindow):
         exit_action = file_menu.addAction("&Exit")
         exit_action.triggered.connect(self.close)
         exit_action.setToolTip("Exit the application")
+        exit_action.setShortcut(QKeySequence.Quit)
 
-        # Options Menu
+        # Options Menu (Settings and Profiles will be moved to a dedicated settings page later)
         options_menu = menu_bar.addMenu("&Options")
-        settings_action = options_menu.addAction("&Settings")
-        settings_action.triggered.connect(self.show_settings)
-        settings_action.setToolTip("Configure application settings")
-        profiles_action = options_menu.addAction("&Profiles")
-        profiles_action.triggered.connect(self.show_profiles)
-        profiles_action.setToolTip("Manage user profiles")
 
-        many_models_action = options_menu.addAction("&Many Models Conversations")
+        many_models_action = options_menu.addAction("Many Models Conversations")
         many_models_action.setToolTip("Engage with multiple models simultaneously (Coming Soon)")
         if not is_feature_enabled(ENABLE_MANY_MODELS_CONVERSATIONS):
             many_models_action.setEnabled(False)
+
+        agent_builder_action = options_menu.addAction("Agent Builder")
+        agent_builder_action.triggered.connect(self.show_agent_builder)
+        agent_builder_action.setToolTip("Create and manage AI agent profiles")
 
     def show_settings(self):
         dialog = SettingsDialog(self)
@@ -151,6 +196,10 @@ class ColonelKDEApp(QMainWindow):
 
     def show_profiles(self):
         dialog = ProfilesDialog(self)
+        dialog.exec()
+
+    def show_agent_builder(self):
+        dialog = AgentBuilderDialog(self)
         dialog.exec()
 
     def apply_modern_stylesheet(self):

@@ -16,7 +16,7 @@ import threading
 import uuid
 
 try:
-    import pkg_resources
+    import importlib.metadata
 except ImportError:
     pkg_resources = None
 import requests
@@ -51,13 +51,11 @@ def send_telemetry(event_name, properties=None):
     if properties is None:
         properties = {}
     try:
-        if pkg_resources:
-            properties["oi_version"] = pkg_resources.get_distribution(
-                "open-interpreter"
-            ).version
+        if importlib.metadata:
+            properties["oi_version"] = importlib.metadata.version("open-interpreter")
         else:
-            properties["oi_version"] = "0.4.3-the-colonel"  # Fallback when pkg_resources unavailable
-    except (pkg_resources.DistributionNotFound if pkg_resources else Exception):
+            properties["oi_version"] = "0.4.3-the-colonel"  # Fallback when importlib.metadata unavailable
+    except (importlib.metadata.PackageNotFoundError if importlib.metadata else Exception):
         properties["oi_version"] = "0.4.3-the-colonel"  # Fallback for development
     try:
         url = "https://app.posthog.com/capture"

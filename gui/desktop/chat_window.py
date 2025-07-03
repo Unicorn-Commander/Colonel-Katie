@@ -1,12 +1,13 @@
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QTextEdit, QLineEdit, QPushButton, QComboBox, QHBoxLayout, QLabel
 from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QTextCharFormat, QTextCursor, QColor, QFont
+from .services.settings_manager import SettingsManager
 from markdown_it import MarkdownIt
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name, ClassNotFound
 from pygments.formatters import HtmlFormatter
 
-from services.function_registry import FunctionRegistry
+from .services.function_registry import FunctionRegistry
 
 class ChatWindow(QWidget):
     send_command_signal = Signal(str)
@@ -19,22 +20,25 @@ class ChatWindow(QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(5)
 
-        self.model_switcher = QComboBox(self)
-        self.model_switcher.setPlaceholderText("Select Model")
-        self.layout.addWidget(self.model_switcher)
+        
 
-        self.populate_model_switcher()
-        self.model_switcher.currentIndexChanged.connect(self._on_model_switcher_changed)
+        self.settings_manager = SettingsManager()
+        font_size = self.settings_manager.get_setting("FONT_SIZE", "11") # Default to 11 if not set
+
+        font = QFont()
+        font.setPointSize(int(font_size))
 
         self.output_display = QTextEdit()
         self.output_display.setReadOnly(True)
         self.output_display.setObjectName("chatOutputDisplay") # For styling
+        self.output_display.setFont(font)
         self.layout.addWidget(self.output_display)
 
         self.input_field = QLineEdit()
         self.input_field.setPlaceholderText("Type your command here...")
         self.input_field.returnPressed.connect(self.send_command)
         self.input_field.setObjectName("chatInputField") # For styling
+        self.input_field.setFont(font)
         self.layout.addWidget(self.input_field)
 
         self.send_button = QPushButton("Send")
@@ -74,27 +78,7 @@ class ChatWindow(QWidget):
         self.layout.addWidget(self.conversation_analytics_label)
 
         # Chat Header Enhancement Placeholders
-        self.token_count_label = QLabel("Tokens: 0/0")
-        self.layout.addWidget(self.token_count_label)
-
-        self.temperature_slider_label = QLabel("Temperature: 0.7")
-        self.layout.addWidget(self.temperature_slider_label)
-
-        self.max_tokens_input = QLineEdit(self)
-        self.max_tokens_input.setPlaceholderText("Max Tokens")
-        self.layout.addWidget(self.max_tokens_input)
-
-        self.system_prompt_button = QPushButton("Edit System Prompt")
-        self.layout.addWidget(self.system_prompt_button)
-
-        self.clear_conversation_button = QPushButton("Clear Conversation")
-        self.layout.addWidget(self.clear_conversation_button)
-
-        self.export_options_button = QPushButton("Export Options")
-        self.layout.addWidget(self.export_options_button)
-
-        self.share_conversation_button = QPushButton("Share Conversation")
-        self.layout.addWidget(self.share_conversation_button)
+        
 
         # Function Management
         self.function_registry_browser_label = QLabel("Function Registry Browser (Coming Soon)")
@@ -130,6 +114,25 @@ class ChatWindow(QWidget):
         self.current_assistant_response_buffer = ""
         self.in_code_block = False # State variable for code block formatting
         self.code_lang = "python" # Default language for code blocks
+
+    def _render_markdown_with_code(self, markdown_text):
+        html = []
+        for block in self.md.parse(markdown_text):
+            if block.type == 'fence' and block.info:
+                lang = block.info.strip()
+                code = block.content
+                try:
+                    lexer = get_lexer_by_name(lang)
+                    highlighted_code = highlight(code, lexer, self.formatter)
+                    html.append(f'<pre><code class="language-{lang}">{highlighted_code}</code></pre>')
+                except ClassNotFound:
+                    html.append(f'<pre><code class="language-{lang}">{code}</code></pre>')
+            elif block.type == 'paragraph':
+                html.append(f'<p>{block.content}</p>')
+            elif block.type == 'text':
+                html.append(block.content)
+            # Add more markdown block types as needed
+        return "".join(html)
 
     def send_command(self):
         command = self.input_field.text()
@@ -200,16 +203,7 @@ class ChatWindow(QWidget):
 
         self.output_display.verticalScrollBar().setValue(self.output_display.verticalScrollBar().maximum())
 
-    def populate_model_switcher(self):
-        self.model_switcher.clear()
-        models = self.chat_manager.model_manager.list_all_models()
-        for model in models:
-            self.model_switcher.addItem(f"{model['name']} ({model['source']})")
-
-    def _on_model_switcher_changed(self, index):
-        selected_model_text = self.model_switcher.currentText()
-        model_name = selected_model_text.split(" (")[0]
-        self.chat_manager.set_current_model(model_name)
+    
 
     def ask_multiple_models(self, query):
         # Placeholder for asking multiple models

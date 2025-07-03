@@ -4,12 +4,12 @@ from PySide6.QtCore import Qt, QPropertyAnimation, QRect, QSize, Signal
 from PySide6.QtGui import QIcon
 import os
 from interpreter import OpenInterpreter
-from services.web_search import WebSearchService
-from services.rag_manager import RAGManager
-from services.model_manager import ModelManager
-from services.settings_manager import SettingsManager
-from services.function_registry import FunctionRegistry
-from feature_toggles import is_feature_enabled, ENABLE_RAG, ENABLE_WEB_SEARCH, ENABLE_IMAGE_GENERATION, ENABLE_MODEL_BUILDER, ENABLE_MANY_MODELS_CONVERSATIONS
+from .services.web_search import WebSearchService
+from .services.rag_manager import RAGManager
+from .services.model_manager import ModelManager
+from .services.settings_manager import SettingsManager
+from .services.function_registry import FunctionRegistry
+from .feature_toggles import is_feature_enabled, ENABLE_RAG, ENABLE_WEB_SEARCH, ENABLE_IMAGE_GENERATION, ENABLE_MODEL_BUILDER, ENABLE_MANY_MODELS_CONVERSATIONS
 
 class CollapsibleSection(QWidget):
     def __init__(self, title="", parent=None):

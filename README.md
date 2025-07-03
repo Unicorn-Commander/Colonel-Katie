@@ -1,6 +1,6 @@
-# 🔥 The_Colonel
+# 🦄 Colonel Katie (LtCol Katie)
 
-**An enhanced Open Interpreter fork with robust Open WebUI integration and advanced computer control capabilities**
+**Your Personal AI Assistant - An enhanced Open Interpreter fork with advanced features and military precision**
 
 <p align="center">
     <a href="LICENSE"><img src="https://img.shields.io/static/v1?label=license&message=AGPL&color=white&style=flat" alt="License"/></a>
@@ -10,7 +10,22 @@
     <img src="https://img.shields.io/badge/Computer-Control-red.svg" alt="Computer Control"/>
 </p>
 
-The_Colonel is a powerful, battle-tested fork of Open Interpreter designed for serious automation and AI-powered computer control. With comprehensive Open WebUI integration, advanced streaming capabilities, and robust error handling, it bridges the gap between conversational AI and practical system automation.
+Colonel Katie is a powerful AI assistant built on The Colonel codebase, featuring military-themed personality, advanced document management, and cutting-edge GUI design. With comprehensive Open WebUI integration, voice capabilities, and per-agent RAG systems, she bridges the gap between conversational AI and practical productivity.
+
+## 📚 **Complete Documentation**
+
+**👉 Start here: [DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)** - Complete guide to all documentation
+
+### **🎯 Key Planning Documents**
+- **[COLONEL_KATIE_MASTER_ROADMAP.md](./COLONEL_KATIE_MASTER_ROADMAP.md)** - 18-week development roadmap
+- **[PROJECT_MANAGEMENT_PLAN.md](./PROJECT_MANAGEMENT_PLAN.md)** - Sprint planning and execution
+- **[FEATURE_PRIORITY_MATRIX.md](./FEATURE_PRIORITY_MATRIX.md)** - Scientific feature prioritization
+- **[IMPLEMENTATION_TIMELINE.md](./IMPLEMENTATION_TIMELINE.md)** - Week-by-week schedule
+
+### **🚨 Critical Issues**
+- **2 critical bugs** identified and prioritized for immediate fixing
+- **See bug reports** in documentation/ directory
+- **TASK-000** in project plan addresses all critical issues
 
 ## ✨ Key Features
 

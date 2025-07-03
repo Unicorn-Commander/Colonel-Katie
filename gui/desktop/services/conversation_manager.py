@@ -1,3 +1,6 @@
+import json
+import uuid
+
 class ConversationManager:
     def __init__(self):
         self.conversations = {}

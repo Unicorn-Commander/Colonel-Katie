@@ -66,38 +66,83 @@ MODERN_STYLESHEET = """
         background: rgba(255, 255, 255, 0.08);
     }
     
-    QPushButton, QDialog QPushButton {
+    /* Primary action buttons */
+    QPushButton {
+        background: rgba(255, 255, 255, 0.06);
+        color: #f8f9fa;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 10pt;
+        transition: all 150ms ease;
+    }
+    
+    /* Dialog buttons (more prominent) */
+    QDialog QPushButton {
         background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
             stop:0 #8b5cf6, stop:1 #a855f7);
         color: #ffffff;
         border: none;
-        padding: 14px 28px;
-        border-radius: 12px;
+        padding: 10px 16px;
+        border-radius: 8px;
         font-weight: 600;
-        font-size: 10.5pt;
-        letter-spacing: 0.025em;
-        transition: all 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
-    }
-    
-    QPushButton:hover, QDialog QPushButton:hover {
-        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-            stop:0 #7c3aed, stop:1 #9333ea);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(139, 92, 246, 0.35);
-    }
-    
-    QPushButton:pressed, QDialog QPushButton:pressed {
-        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-            stop:0 #6d28d9, stop:1 #7c2d12);
-        transform: translateY(0);
+        font-size: 10pt;
         box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2);
+    }
+    
+    QPushButton:hover {
+        background: rgba(255, 255, 255, 0.10);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    QPushButton:pressed {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+    
+    QDialog QPushButton:hover {
+        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+            stop:0 #7a4cd5, stop:1 #9744e6);
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    }
+    
+    QDialog QPushButton:pressed {
+        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+            stop:0 #693bb4, stop:1 #8633c5);
+        box-shadow: 0 1px 4px rgba(139, 92, 246, 0.15);
     }
     
     QPushButton:disabled {
         background: rgba(255, 255, 255, 0.05);
         color: rgba(255, 255, 255, 0.3);
         box-shadow: none;
+    }
+    
+    /* Compact buttons for toolbars and menus */
+    QPushButton[objectName*="compact"], QPushButton[objectName*="icon"] {
+        padding: 6px 8px;
+        min-width: 24px;
+        min-height: 24px;
+        border-radius: 4px;
+        font-size: 9pt;
+    }
+    
+    /* Send button style (like ChatGPT) */
+    QPushButton[objectName*="send"] {
+        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+            stop:0 #8b5cf6, stop:1 #a855f7);
+        color: #ffffff;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-weight: 600;
+        min-width: 60px;
+    }
+    
+    QPushButton[objectName*="send"]:hover {
+        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+            stop:0 #7a4cd5, stop:1 #9744e6);
     }
     
     QTextEdit#chatOutputDisplay {

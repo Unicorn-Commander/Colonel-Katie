@@ -1,5 +1,7 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLineEdit, QTextEdit, QLabel, QComboBox, QPushButton, QListWidget
-from PySide6.QtCore import Qt, QPoint, QSize, QScreen
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLineEdit, QTextEdit, QLabel, QComboBox, QPushButton, QListWidget, QApplication
+from PySide6.QtCore import Qt, QPoint, QSize
+from PySide6.QtGui import QScreen, QFont
+from ..services.settings_manager import SettingsManager
 from PySide6.QtGui import QKeyEvent
 
 from .quick_settings import QuickSettings
@@ -9,15 +11,23 @@ class QuickChatWindow(QWidget):
         super().__init__(parent)
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         self.quick_settings = QuickSettings()
+        self.settings_manager = SettingsManager()
+        font_size = self.settings_manager.get_setting("FONT_SIZE", "11") # Default to 11 if not set
+
+        font = QFont()
+        font.setPointSize(int(font_size))
+
         self._load_geometry()
 
         self.layout = QVBoxLayout(self)
         self.input_field = QLineEdit(self)
         self.input_field.setPlaceholderText("Ask The Colonel...")
+        self.input_field.setFont(font)
         self.layout.addWidget(self.input_field)
 
         self.display_area = QTextEdit(self)
         self.display_area.setReadOnly(True)
+        self.display_area.setFont(font)
         self.layout.addWidget(self.display_area)
 
         self.model_switcher = QComboBox(self)
@@ -31,10 +41,10 @@ class QuickChatWindow(QWidget):
         self.layout.addWidget(self.recent_conversations_label)
 
         self.recent_conversations_list = QListWidget(self)
-        self.recent_conversations_list.setPlaceholderText("No recent conversations.")
         self.layout.addWidget(self.recent_conversations_list)
 
         self.input_field.installEventFilter(self) # To capture focus out event
+        self.input_field.setFocus() # Set focus to input field on window display
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key_Escape:
