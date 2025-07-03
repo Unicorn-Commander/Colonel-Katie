@@ -1,461 +1,411 @@
-# 🦄 Colonel Katie (LtCol Katie)
+# 🦄⚡ Colonel Katie - AI Agent Development Platform ⚡🦄
 
-**Your Personal AI Assistant - An enhanced Open Interpreter fork with advanced features and military precision**
+**Professional AI Agent Development Platform with Visual Builder**
 
-<p align="center">
-    <a href="LICENSE"><img src="https://img.shields.io/static/v1?label=license&message=AGPL&color=white&style=flat" alt="License"/></a>
-    <img src="https://img.shields.io/badge/Python-3.9+-blue.svg" alt="Python Version"/>
-    <img src="https://img.shields.io/badge/Open%20WebUI-Compatible-green.svg" alt="Open WebUI Compatible"/>
-    <img src="https://img.shields.io/badge/Streaming-Responses-orange.svg" alt="Streaming Support"/>
-    <img src="https://img.shields.io/badge/Computer-Control-red.svg" alt="Computer Control"/>
-</p>
-
-Colonel Katie is a powerful AI assistant built on The Colonel codebase, featuring military-themed personality, advanced document management, and cutting-edge GUI design. With comprehensive Open WebUI integration, voice capabilities, and per-agent RAG systems, she bridges the gap between conversational AI and practical productivity.
-
-## 📚 **Complete Documentation**
-
-**👉 Start here: [DOCUMENTATION_INDEX.md](./DOCUMENTATION_INDEX.md)** - Complete guide to all documentation
-
-### **🎯 Key Planning Documents**
-- **[COLONEL_KATIE_MASTER_ROADMAP.md](./COLONEL_KATIE_MASTER_ROADMAP.md)** - 18-week development roadmap
-- **[PROJECT_MANAGEMENT_PLAN.md](./PROJECT_MANAGEMENT_PLAN.md)** - Sprint planning and execution
-- **[FEATURE_PRIORITY_MATRIX.md](./FEATURE_PRIORITY_MATRIX.md)** - Scientific feature prioritization
-- **[IMPLEMENTATION_TIMELINE.md](./IMPLEMENTATION_TIMELINE.md)** - Week-by-week schedule
-
-### **🚨 Critical Issues**
-- **2 critical bugs** identified and prioritized for immediate fixing
-- **See bug reports** in documentation/ directory
-- **TASK-000** in project plan addresses all critical issues
-
-## ✨ Key Features
-
-- **🧠 Adaptive Memory System**: Persistent, LLM-driven memory for personalized and contextual interactions.
-- **🎨 Cutting-Edge Modern GUI**: Next-generation interface with glass morphism effects, advanced typography, and micro-interactions
-- **🖥️ Complete Desktop Integration**: Native KDE application launcher, KRunner search, system tray, and command-line access
-- **🗃️ Custom File Indexing**: Intelligent indexing and embedding of local files for project-aware AI assistance.
-- **🌐 Seamless Open WebUI Integration**: Production-ready API server with OpenAI-compatible streaming endpoints
-- **🛠️ Comprehensive Tool Arsenal**: 12+ specialized endpoints for code execution, file operations, and computer control
-- **🖥️ Advanced Computer Control**: Direct mouse/keyboard interaction, screenshots, and window management
-- **📁 Intelligent File Management**: Advanced file operations with upload/download capabilities
-- **👤 Dynamic Profile System**: Hot-swappable configurations for different AI models and use cases
-- **🔐 Enterprise-Ready Security**: Bearer token authentication with localhost development mode
-- **⚡ Optimized Streaming**: Robust chunk processing with real-time response streaming
-- **🔧 Error-Resilient Architecture**: Advanced error handling and recovery mechanisms
-- **📋 OpenAPI 3.1 Specification**: Full API documentation with tagged tool categorization
-
-## 🚀 Quick Start
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/Unicorn-Commander/The_Colonel.git
-cd The_Colonel
-
-# Set up virtual environment
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install in development mode
-pip install -e .
-```
-
-### Basic Usage
-
-**Traditional Terminal Interface:**
-```bash
-interpreter
-```
-
-**🎨 Modern Desktop GUI:**
-```bash
-# Launch cutting-edge modern GUI
-python -m gui.desktop.main
-
-# Or install as native KDE application
-./install_desktop.sh
-
-# Then launch from:
-# - KDE Application Launcher (search "The Colonel")
-# - KRunner (Alt+Space, type "colonel") 
-# - Terminal (type "colonel")
-```
-
-**Open WebUI Server Mode:**
-```bash
-python -m interpreter.api.main
-```
-
-**With Custom Configuration:**
-```bash
-# Set environment variables in .env file
-OPENAI_API_KEY=your_key_here
-DEFAULT_PROFILE=The_Colonel.py
-SERVER_PORT=8000
-
-python -m interpreter.api.main
-```
-
-**Direct uvicorn Usage:**
-```bash
-uvicorn interpreter.api.main:app --host 0.0.0.0 --port 8000
-```
-
-**Quick Start Scripts:**
-```bash
-# Local development (no authentication)
-./start_server.sh
-
-# Remote access with authentication
-./start_server_auth.sh
-```
-
-## 🎨 Modern Desktop GUI
-
-The Colonel features a **cutting-edge, next-generation GUI** that surpasses the visual quality of Open WebUI and other AI interfaces.
-
-### ✨ Design Features
-
-- **🔮 Glass Morphism Effects**: Translucent sidebars with backdrop blur filters
-- **📝 Modern Typography**: "Inter" and "SF Pro Display" fonts with optimized spacing  
-- **🌈 Advanced Gradients**: Multi-stop gradients throughout the interface
-- **💫 Micro-Interactions**: Smooth hover animations and shadow effects
-- **🎯 Professional UX**: 16px border radius, enhanced spacing, premium aesthetics
-
-### 🖥️ Desktop Integration
-
-- **📱 KDE Application Launcher**: Search "The Colonel" in your application menu
-- **🔍 KRunner Integration**: Press `Alt+Space` and type "colonel" 
-- **🔔 System Tray**: Show/hide and quit functionality
-- **⌨️ Terminal Access**: Use `colonel` command anywhere
-- **⚙️ One-Click Install**: Automated desktop integration
-
-### 🚀 Installation & Usage
-
-```bash
-# Install as native KDE application
-./install_desktop.sh
-
-# Launch Methods:
-# 1. From Application Launcher: Search "The Colonel"
-# 2. From KRunner: Alt+Space → type "colonel"
-# 3. From Terminal: type "colonel"  
-# 4. Direct: python -m gui.desktop.main
-```
-
-For complete installation guide, see [DESKTOP_INTEGRATION.md](DESKTOP_INTEGRATION.md).
-
-## 🔧 Open WebUI Integration
-
-### Individual Tool Servers
-
-The_Colonel provides **4 specialized tool servers** that can be added individually to Open WebUI:
-
-**🐍 Python Code Executor:**
-- Server: `http://your-ip:8000/python`
-- OpenAPI: `http://your-ip:8000/python/openapi.json`
-- Execute Python code, data analysis, calculations
-
-**🔧 Shell Command Executor:**
-- Server: `http://your-ip:8000/shell` 
-- OpenAPI: `http://your-ip:8000/shell/openapi.json`
-- Run bash/shell commands, system operations
-
-**📁 File Operations:**
-- Server: `http://your-ip:8000/files`
-- OpenAPI: `http://your-ip:8000/files/openapi.json`
-- Read, write, and manage files
-
-**🖥️ Computer Control:**
-- Server: `http://your-ip:8000/computer`
-- OpenAPI: `http://your-ip:8000/computer/openapi.json`
-- Screenshots, mouse clicks, keyboard input
-
-### Legacy Endpoints
-- `GET /openapi.json` - Complete API specification
-- `POST /v1/chat/completions` - OpenAI-compatible chat endpoint
-
-### Open WebUI Configuration
-
-**LLM Connection:**
-- Base URL: `http://localhost:8000/v1`
-- Model: `the-colonel`
-
-**Individual Tool Setup:**
-Add each tool separately to Open WebUI with:
-- Tool Server URL: `http://your-ip:8000/{tool-name}`
-- API Key: `your-auth-token` (not required for localhost)
-- OpenAPI JSON: `http://your-ip:8000/{tool-name}/openapi.json`
-
-**📖 Complete Tool Documentation:** See [Tool Reference Guide](documentation/Tool_Reference.md) for detailed setup instructions, examples, and usage patterns.
-
-### Profile Selection
-
-Use the `profile` query parameter for chat completions:
-```bash
-curl -X POST "http://localhost:8000/v1/chat/completions?profile=The_Colonel" \
-  -H "Content-Type: application/json" \
-  -d '{"messages": [{"role": "user", "content": "Hello"}]}'
-```
-
-## 🎯 Use Cases
-
-**For Developers:**
-- Code execution and debugging through web interface
-- File management and project manipulation
-- Automated testing and deployment scripts
-
-**For Power Users:**
-- Computer automation via API calls
-- Screen capture and GUI automation
-- Advanced file processing workflows
-
-**For Integration:**
-- Embed in existing web applications
-- Build custom frontends with the API
-- Create automated workflows and pipelines
-
-## 🛡️ Security & Safety
-
-**Local Development:**
-- No authentication required for `localhost` access
-- Safe for development and testing
-
-**Remote Access:**
-- Bearer token authentication required
-- Use strong tokens for production deployments
-
-**Code Execution:**
-- All code execution happens in your local environment
-- Review and approve code before execution in interactive mode
-- Use `auto_run` carefully in production environments
-
-## 📚 Advanced Usage
-
-### Python API
-
-```python
-from interpreter import interpreter
-
-# Basic chat
-interpreter.chat("Analyze this dataset and create visualizations")
-
-# Streaming responses
-for chunk in interpreter.chat("Process these files", stream=True):
-    print(chunk)
-
-# Custom configuration
-interpreter.llm.model = "gpt-4"
-interpreter.auto_run = True
-interpreter.os = True  # Enable OS control features
-```
-
-### Profile System
-
-Create custom profiles in `interpreter/terminal_interface/profiles/defaults/`:
-
-```python
-# my_profile.py
-from interpreter import interpreter
-
-interpreter.llm.model = "gpt-4"
-interpreter.llm.temperature = 0.1
-interpreter.auto_run = True
-interpreter.os = True
-interpreter.computer.import_computer_api = True
-```
-
-Use with:
-```bash
-interpreter --profile my_profile.py
-```
-
-## ⚡ Streaming & Performance
-
-### Robust Chunk Processing
-
-The_Colonel features advanced streaming response handling that properly processes various chunk formats from the interpreter:
-
-- **Error-Resilient**: Individual chunk processing errors don't crash the entire conversation
-- **Format-Agnostic**: Handles dictionary chunks, string chunks, and malformed data gracefully  
-- **Type-Safe**: Uses `.get()` methods instead of direct key access to prevent KeyErrors
-- **Debug-Friendly**: Comprehensive logging for troubleshooting chunk processing issues
-
-### Technical Architecture
-
-**Streaming Response Flow:**
-1. OpenAI-compatible request received
-2. Profile configuration loaded dynamically
-3. Messages converted to interpreter format
-4. Interpreter streams chunks in real-time
-5. Chunks processed through robust error handling
-6. Server-Sent Events formatted for Open WebUI
-7. Real-time display in web interface
-
-## 🛠️ Troubleshooting
-
-### Common Issues
-
-**1. API Key Authentication Errors**
-```bash
-# Check your API key is set correctly
-echo $OPENAI_API_KEY
-
-# Update .env file if needed
-nano .env
-```
-
-**2. Streaming Response Issues** 
-- "Error: 'type'" on second messages → Fixed with improved message state management
-- Messages appear in terminal but not GUI → Resolved with proper SSE formatting
-- KeyError 'type' exceptions → Handled with robust chunk processing
-
-**3. Profile Loading Problems**
-```bash
-# Clear Python cache if profiles aren't reloading
-find . -name "*.pyc" -delete
-find . -name "__pycache__" -type d -exec rm -rf {} +
-```
-
-**4. Port Already in Use**
-```bash
-# Find and kill process using port 8000
-lsof -ti:8000 | xargs kill -9
-```
-
-### Debug Mode
-
-Enable detailed logging:
-```bash
-interpreter --openwebui_server --verbose
-```
-
-## 🔧 Configuration
-
-### Environment Variables
-
-Copy `.env.example` to `.env` and configure your settings:
-
-```bash
-cp .env.example .env
-# Edit with your actual API keys and settings
-```
-
-```env
-# API Keys
-OPENAI_API_KEY=your_openai_key_here
-ANTHROPIC_API_KEY=your_anthropic_key_here
-XAI_API_KEY=your_xai_key_here
-DEEPSEEK_API_KEY=your_deepseek_key_here
-
-# Server Configuration  
-DEFAULT_PROFILE=The_Colonel.py
-SERVER_HOST=0.0.0.0
-SERVER_PORT=8000
-AUTH_TOKEN=your_secure_random_token
-
-# General Settings
-DISABLE_TELEMETRY=true
-AUTO_RUN=false
-SAFE_MODE=off
-```
-
-### Profile Customization
-
-Advanced profile example with environment-based API key:
-
-```python
-# custom_profile.py
-import os
-from interpreter import interpreter
-
-# Model Configuration
-interpreter.llm.model = "gpt-4o-mini"
-interpreter.llm.api_key = os.getenv("OPENAI_API_KEY")
-interpreter.llm.temperature = 0.1
-interpreter.llm.context_window = 128000
-interpreter.llm.max_tokens = 16384
-
-# Capabilities
-interpreter.auto_run = True
-interpreter.os = True
-interpreter.computer.import_computer_api = True
-
-# Custom instructions for better computer control
-interpreter.custom_instructions = """
-When taking screenshots, if you encounter errors with pywinctl, 
-try using computer.display.screenshot(active_app_only=False) instead.
-"""
-```
-
-## 🔨 Development
-
-### Project Structure
-
-```
-The_Colonel/
-├── interpreter/
-│   ├── core/
-│   │   ├── openwebui_server.py    # Open WebUI integration
-│   │   └── ...
-│   ├── computer_use/
-│   │   └── tools/                 # Computer control tools
-│   └── terminal_interface/
-│       └── profiles/              # Configuration profiles
-├── openapi.json                   # API specification
-├── documentation/                 # Project documentation
-└── examples/                      # Usage examples
-```
-
-### Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes and test thoroughly
-4. Submit a pull request with detailed description
-
-### Testing
-
-```bash
-# Test server functionality
-source venv/bin/activate
-python -c "from interpreter.api.server import create_colonel_katie_server; print('✅ Server tests passed')"
-
-# Start test server
-python -m interpreter.api.main
-
-# Test endpoints
-curl http://localhost:8000/openapi.json
-```
-
-## 📖 Documentation
-
-- **[Tool Reference Guide](documentation/Tool_Reference.md)** - Complete tool documentation with examples
-- **[Technical Implementation Guide](documentation/Technical_Implementation_Guide.md)** - Architecture and technical details
-- **[Project Summary](documentation/Project_Summary.md)** - Project overview and current status
-- **[Setup Guide](documentation/Task_Checklist-The_Colonel.md)** - Installation and configuration
-- **[OpenAPI Spec](openapi.json)** - Complete API documentation
-
-## 🏗️ Based on Open Interpreter
-
-The_Colonel builds upon the excellent foundation of [Open Interpreter](https://github.com/OpenInterpreter/open-interpreter), adding:
-
-- Open WebUI compatibility
-- Enhanced tool endpoints
-- Computer control capabilities
-- Improved profile system
-- Production-ready API server
-
-## 📜 License
-
-This project is licensed under the AGPL License - see the [LICENSE](LICENSE) file for details.
-
-## 🤝 Acknowledgments
-
-- **Open Interpreter Team** - For the incredible foundation
-- **Open WebUI Community** - For the inspiration and integration target
-- **Contributors** - For making this project better
+![Version](https://img.shields.io/badge/version-2.0-blue.svg)
+![Python](https://img.shields.io/badge/python-3.8+-green.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Status](https://img.shields.io/badge/status-Production%20Ready-brightgreen.svg)
 
 ---
 
-**⚠️ Note**: The_Colonel executes code in your local environment. Always review and understand code before execution, especially when using `auto_run` mode or in production environments.
+## 🌟 Overview
+
+Colonel Katie is a comprehensive AI agent development platform that transforms the way you create, manage, and deploy AI agents. With a professional visual interface, extensive prompt library, and powerful integrations, Colonel Katie makes AI agent development accessible to everyone.
+
+### ✨ Key Features
+
+- 🎨 **Visual Agent Builder** - Create AI agents with an intuitive point-and-click interface
+- 📚 **Professional Prompt Library** - 10+ expert-crafted templates across multiple categories
+- 🤖 **Multi-Provider Support** - Ollama, OpenAI, HuggingFace, and custom model providers
+- 🧠 **RAG Integration** - Upload documents and build intelligent knowledge bases
+- 🎙️ **Voice Interaction** - Push-to-talk and text-to-speech capabilities
+- 💾 **Memory Management** - Persistent memory with mem0ai integration
+- 📊 **Real-time Monitoring** - System status, memory usage, and connection monitoring
+- 🎯 **Export & Sharing** - Save conversations in JSON/Markdown formats
+- ⌨️ **Power User Features** - Keyboard shortcuts and advanced settings
+
+---
+
+## 🚀 Quick Start
+
+### Option 1: Automated Installation (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/Colonel-Katie.git
+cd Colonel-Katie
+
+# Run the installer
+python install.py
+```
+
+The installer will:
+- Check Python compatibility
+- Create a virtual environment
+- Install all dependencies
+- Set up desktop shortcuts
+- Create launcher scripts
+
+### Option 2: Manual Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/Colonel-Katie.git
+cd Colonel-Katie
+
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# On Linux/Mac:
+source venv/bin/activate
+# On Windows:
+venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run Colonel Katie
+python main.py
+```
+
+---
+
+## 📋 System Requirements
+
+### Minimum Requirements
+- **Python**: 3.8 or higher
+- **RAM**: 4GB (8GB recommended)
+- **Storage**: 2GB free space
+- **OS**: Windows 10+, macOS 10.14+, or Linux (Ubuntu 18.04+)
+
+### Recommended Requirements
+- **Python**: 3.10+
+- **RAM**: 8GB or more
+- **Storage**: 5GB free space
+- **GPU**: CUDA-compatible for local model inference
+
+### Dependencies
+- PySide6 (GUI framework)
+- OpenInterpreter (AI integration)
+- ChromaDB (vector database)
+- SentenceTransformers (embeddings)
+- PyAudio, pyttsx3, SpeechRecognition (voice features)
+- mem0ai (memory management)
+
+---
+
+## 🎯 Core Features
+
+### 🎨 Visual Agent Builder
+
+Create sophisticated AI agents without writing code:
+
+- **General Settings**: Agent name, profile picture, description
+- **Model Configuration**: Choose from multiple providers and models
+- **Prompt Templates**: Select from professional prompt library
+- **Tool Selection**: Enable/disable capabilities (shell, browser, files)
+- **Voice Settings**: Configure text-to-speech profiles
+- **Memory Integration**: Persistent conversation memory
+
+### 📚 Prompt Library
+
+Choose from expertly crafted prompt templates:
+
+- **General**: Helpful AI Assistant
+- **Development**: Code Reviewer, Technical Writer
+- **Writing**: Creative Writer, Content Creator
+- **Analytics**: Data Analyst, Research Assistant
+- **Business**: Business Analyst, Product Manager
+- **Security**: Cybersecurity Expert
+- **DevOps**: System Administrator
+
+### 🧠 RAG (Retrieval Augmented Generation)
+
+Build intelligent knowledge bases:
+
+- **Document Upload**: PDF, DOCX, TXT, MD, HTML, code files
+- **Drag & Drop**: Easy document management
+- **Vector Search**: Semantic search through documents
+- **Chunking Strategies**: Optimized text processing
+- **Real-time Indexing**: Instant document processing
+
+### 🎙️ Voice Interaction
+
+Natural voice communication:
+
+- **Push-to-Talk**: Space bar activation
+- **Speech Recognition**: Convert speech to text
+- **Text-to-Speech**: AI voice responses
+- **Voice Profiles**: Multiple voice options
+- **Wake Word Detection**: Hands-free activation (coming soon)
+
+---
+
+## 🎮 User Guide
+
+### First Launch
+
+1. **Welcome Screen**: Colonel Katie displays a splash screen during initialization
+2. **Model Selection**: Choose your preferred AI model from the sidebar
+3. **Agent Creation**: Use the Agent Builder (Ctrl+Shift+A) to create your first agent
+4. **Document Upload**: Add knowledge documents via drag & drop
+
+### Basic Usage
+
+#### Creating an AI Agent
+
+1. Press `Ctrl+Shift+A` or go to Options → Agent Builder
+2. **General Settings**: Enter agent name and select profile picture
+3. **Prompt Selection**: Choose from the prompt library or write custom instructions
+4. **Model Configuration**: Select model provider and specific model
+5. **Tool Selection**: Enable capabilities (shell, browser, files, etc.)
+6. **Save**: Click "Save Agent Profile" to create your agent
+
+#### Chat Interface
+
+- **Send Messages**: Type in the input field and press Enter
+- **Voice Input**: Hold Space bar to record voice messages
+- **Speak Responses**: Click the 🔊 icon to hear responses
+- **Context Menu**: Right-click messages for copy, edit, regenerate options
+- **Quick Settings**: Click ⚙️ for model and temperature adjustments
+
+#### Document Management
+
+- **Upload Documents**: Drag & drop files into the knowledge management section
+- **Supported Formats**: PDF, DOCX, TXT, MD, HTML, code files
+- **Search Documents**: RAG automatically searches relevant content
+- **Manage Collections**: Organize documents by topic or project
+
+### Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+L` | Focus chat input field |
+| `Ctrl+K` | Clear chat history |
+| `F9` | Toggle sidebars |
+| `Ctrl+Shift+A` | Open Agent Builder |
+| `Ctrl+E` | Export conversation |
+| `Space` (hold) | Push-to-talk voice input |
+| `Ctrl+Q` | Quit application |
+
+---
+
+## ⚙️ Configuration
+
+### Model Providers
+
+#### Ollama (Local Models)
+```python
+# Install Ollama first: https://ollama.ai
+# Pull models: ollama pull llama3
+# Colonel Katie auto-discovers Ollama models
+```
+
+#### OpenAI
+```python
+# Set API key in environment or settings
+OPENAI_API_KEY=your_api_key_here
+```
+
+#### HuggingFace
+```python
+# Set token for private models
+HUGGINGFACE_TOKEN=your_token_here
+```
+
+### Environment Variables
+
+Create a `.env` file in the application directory:
+
+```bash
+# API Keys
+OPENAI_API_KEY=your_openai_api_key
+ANTHROPIC_API_KEY=your_anthropic_api_key
+HUGGINGFACE_TOKEN=your_hf_token
+
+# Model Settings
+DEFAULT_MODEL=gpt-4
+DEFAULT_PROVIDER=openai
+
+# Voice Settings
+TTS_ENABLED=true
+STT_ENABLED=true
+
+# Memory Settings
+MEMORY_ENABLED=true
+MEMORY_PROVIDER=mem0ai
+
+# RAG Settings
+RAG_ENABLED=true
+CHUNK_SIZE=1000
+CHUNK_OVERLAP=200
+```
+
+---
+
+## 🔧 Advanced Features
+
+### Custom Model Providers
+
+Add custom model providers through the Agent Builder:
+
+1. Click "Add Custom Model" in model selection
+2. Enter model name and API endpoint
+3. Configure authentication and parameters
+4. Test connection and save
+
+### Memory Management
+
+Colonel Katie uses mem0ai for persistent memory:
+
+- **Automatic Extraction**: Key information saved from conversations
+- **Context Retrieval**: Relevant memories injected into new conversations
+- **Memory Visualization**: View extracted memories in the sidebar
+- **Manual Management**: Add, edit, or delete memories
+
+### Plugin System
+
+Extend Colonel Katie with custom tools:
+
+1. Create tool classes following the interface
+2. Register tools in the function registry
+3. Enable/disable tools per agent
+4. Share tools with the community
+
+---
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+#### Installation Problems
+
+**Python version incompatible**
+```bash
+# Check Python version
+python --version
+# Upgrade Python to 3.8+ if needed
+```
+
+**Missing system dependencies**
+```bash
+# Linux: Install audio libraries
+sudo apt-get install portaudio19-dev python3-pyaudio
+
+# macOS: Install with Homebrew
+brew install portaudio
+```
+
+**Virtual environment issues**
+```bash
+# Delete and recreate venv
+rm -rf venv
+python -m venv venv
+source venv/bin/activate  # or venv\Scripts\activate on Windows
+pip install -r requirements.txt
+```
+
+#### Runtime Issues
+
+**Models not loading**
+- Check API keys in environment variables
+- Verify model names and provider availability
+- Check internet connection for cloud providers
+
+**Voice features not working**
+- Install/update audio drivers
+- Check microphone permissions
+- Verify PyAudio installation
+
+**Memory issues with large documents**
+- Reduce chunk size in RAG settings
+- Close other applications to free RAM
+- Use document pagination for large files
+
+### Getting Help
+
+1. **Documentation**: Check this README and DEVELOPMENT_ROADMAP.md
+2. **Status Bar**: Monitor system status in the bottom bar
+3. **Logs**: Check console output for error messages
+4. **Debug Mode**: Enable verbose logging in settings
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions to Colonel Katie! Here's how to get started:
+
+### Development Setup
+
+```bash
+# Fork and clone the repository
+git clone https://github.com/your-username/Colonel-Katie.git
+cd Colonel-Katie
+
+# Create development environment
+python -m venv dev-env
+source dev-env/bin/activate  # or dev-env\Scripts\activate on Windows
+
+# Install development dependencies
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+
+# Run tests
+python -m pytest tests/
+
+# Start development server
+python main.py
+```
+
+### Contribution Guidelines
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
+
+### Development Focus Areas
+
+- 🔧 **Performance Optimization**: Improve startup time and memory usage
+- 🎨 **UI/UX Enhancements**: Better animations and user experience
+- 🤖 **Model Integrations**: Support for new model providers
+- 🧩 **Plugin System**: Extensible tool and capability framework
+- 📱 **Mobile Support**: Web interface for mobile devices
+- 🌐 **Cloud Deployment**: Docker containers and cloud deployment
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- **OpenInterpreter Team** - Core AI integration framework
+- **PySide6/Qt** - Professional GUI framework
+- **ChromaDB** - Vector database for RAG
+- **mem0ai** - Memory management system
+- **The Open Source Community** - Various dependencies and tools
+
+---
+
+## 📞 Support
+
+- **Documentation**: [GitHub Wiki](https://github.com/your-username/Colonel-Katie/wiki)
+- **Issues**: [GitHub Issues](https://github.com/your-username/Colonel-Katie/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-username/Colonel-Katie/discussions)
+
+---
+
+<div align="center">
+
+**🦄⚡ Colonel Katie - Empowering AI Development with Honor and Efficiency! ⚡🦄**
+
+*Made with ❤️ by the Colonel Katie Team*
+
+</div>

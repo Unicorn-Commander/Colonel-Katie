@@ -1,14 +1,23 @@
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QFrame, QToolButton, QSizePolicy, QPushButton, QComboBox, QFileDialog, QTextEdit, QLineEdit
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QFrame, QToolButton, QSizePolicy, QPushButton, QComboBox, QTextEdit, QLineEdit
 from PySide6.QtCore import Qt, QPropertyAnimation, QRect, QSize, Signal
 from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QApplication # Import QApplication for processEvents
 import os
 from interpreter import OpenInterpreter
 from .services.web_search import WebSearchService
 from .services.rag_manager import RAGManager
 from .services.model_manager import ModelManager
-from .services.settings_manager import SettingsManager
+
+from interpreter.core.config_manager import ConfigManager
 from .services.function_registry import FunctionRegistry
+from .services.stt_service import STTService
+from .services.tts_service import TTSService
+from .services.document_storage_service import DocumentStorageService
+from .services.permission_service import PermissionService
+from .services.memory_service import MemoryService
+from .components.document_manager import DocumentManager
+from .components.memory_manager_component import MemoryManagerComponent
 from .feature_toggles import is_feature_enabled, ENABLE_RAG, ENABLE_WEB_SEARCH, ENABLE_IMAGE_GENERATION, ENABLE_MODEL_BUILDER, ENABLE_MANY_MODELS_CONVERSATIONS
 
 class CollapsibleSection(QWidget):
@@ -56,14 +65,20 @@ class CollapsibleSection(QWidget):
 class RightSidebar(QWidget):
     model_selected_signal = Signal(str)
     send_message_to_chat_signal = Signal(str)
-    def __init__(self, interpreter_instance, parent=None):
+    def __init__(self, interpreter_instance, config_manager, parent=None):
         super().__init__(parent)
         self.interpreter = interpreter_instance
         self.web_search_service = WebSearchService()
-        self.rag_manager = RAGManager()
-        self.model_manager = ModelManager()
-        self.settings_manager = SettingsManager()
+        self._rag_manager = None
+        self._model_manager = None
+        
         self.function_registry = FunctionRegistry()
+        self.stt_service = STTService() # Initialize STTService
+        self.tts_service = TTSService() # Initialize TTSService
+        self.document_storage_service = DocumentStorageService() # Initialize DocumentStorageService
+        self.permission_service = PermissionService() # Initialize PermissionService
+        self.memory_service = MemoryService() # Initialize MemoryService
+        self.config_manager = config_manager # Store ConfigManager instance
         self.layout = QVBoxLayout(self)
         self.layout.setAlignment(Qt.AlignTop) # Align content to the top
         self.layout.setContentsMargins(5, 5, 5, 5)
@@ -85,7 +100,8 @@ class RightSidebar(QWidget):
         self.session_details_layout.addWidget(self.model_selection_combo)
         self.session_details_layout.addWidget(self.api_key_status_label)
 
-        self.model_selected_signal.emit(self.model_selection_combo.currentText()) # Emit initial selection
+        self.model_selected_signal.emit(self.model_selection_combo.currentText())
+        self.model_selection_combo.currentIndexChanged.connect(lambda: self.model_selected_signal.emit(self.model_selection_combo.currentText()))
 
         self.session_details_section.set_content_layout(self.session_details_layout)
         self.layout.addWidget(self.session_details_section)
@@ -98,6 +114,12 @@ class RightSidebar(QWidget):
         self.memory_summary_layout.addWidget(QLabel("Extracted memories will appear here."))
         self.memory_summary_section.set_content_layout(self.memory_summary_layout)
         self.layout.addWidget(self.memory_summary_section)
+
+        # Memory Management Section
+        self.memory_management_section = CollapsibleSection("Memory Management")
+        self.memory_management_component = MemoryManagerComponent(self.memory_service) # Pass memory service
+        self.memory_management_section.set_content_layout(self.memory_management_component.layout)
+        self.layout.addWidget(self.memory_management_section)
 
         # File Indexing Section
         # Knowledge Management Section (Combined File Indexing and RAG Integration)
@@ -128,38 +150,16 @@ class RightSidebar(QWidget):
         self.document_list_display.setPlaceholderText("No documents loaded yet.")
         self.knowledge_management_layout.addWidget(self.document_list_display)
 
-        self.document_preview_label = QLabel("Document Preview (Coming Soon)")
-        self.knowledge_management_layout.addWidget(self.document_preview_label)
+        # Replace existing document management UI with DocumentManager component
+        self.document_manager_component = DocumentManager(self.document_storage_service, self.rag_manager)
+        self.knowledge_management_layout.addWidget(self.document_manager_component)
 
-        self.document_search_input = QLineEdit(self)
-        self.document_search_input.setPlaceholderText("Search documents...")
-        self.knowledge_management_layout.addWidget(self.document_search_input)
-
-        self.batch_operations_label = QLabel("Batch Operations (Coming Soon)")
-        self.knowledge_management_layout.addWidget(self.batch_operations_label)
-
-        self.document_tagging_label = QLabel("Document Tagging (Coming Soon)")
-        self.knowledge_management_layout.addWidget(self.document_tagging_label)
-
-        self.document_processing_status_label = QLabel("Processing Status: Idle")
-        self.knowledge_management_layout.addWidget(self.document_processing_status_label)
-
-        self.collection_management_label = QLabel("Collection Management (Coming Soon)")
-        self.knowledge_management_layout.addWidget(self.collection_management_label)
-
-        self.bulk_upload_button = QPushButton("Bulk Upload Documents")
-        self.bulk_upload_button.clicked.connect(lambda: print("Bulk Upload clicked"))
-        self.knowledge_management_layout.addWidget(self.bulk_upload_button)
-
-        self.document_search_button = QPushButton("Search Documents")
-        self.document_search_button.clicked.connect(lambda: print("Document Search clicked"))
-        self.knowledge_management_layout.addWidget(self.document_search_button)
-
-        self.collection_stats_label = QLabel("Collection Statistics (Coming Soon)")
-        self.knowledge_management_layout.addWidget(self.collection_stats_label)
-
-        self.rag_export_import_label = QLabel("Export/Import RAG Data (Coming Soon)")
-        self.knowledge_management_layout.addWidget(self.rag_export_import_label)
+        # Hide old components that exist
+        if hasattr(self, 'document_list_label'):
+            self.document_list_label.hide()
+        if hasattr(self, 'document_list_display'):
+            self.document_list_display.hide()
+        # Note: Other components were replaced by DocumentManager
 
         self.knowledge_management_section.set_content_layout(self.knowledge_management_layout)
         self.layout.addWidget(self.knowledge_management_section)
@@ -186,71 +186,21 @@ class RightSidebar(QWidget):
         self.advanced_features_layout.setContentsMargins(0, 0, 0, 0)
         self.advanced_features_layout.setSpacing(0)
 
-        # Image Generation Section
-        self.image_generation_section = CollapsibleSection("Image Generation")
-        self.image_generation_layout = QVBoxLayout()
-        self.image_generation_layout.setContentsMargins(10, 5, 10, 5)
-        self.image_generation_layout.setSpacing(5)
-
-        self.generate_image_button = QPushButton("Generate Image")
-        self.generate_image_button.setObjectName("generateImageButton")
-        self.generate_image_button.setToolTip("Generate images using AI (Coming Soon)")
-        self.image_generation_layout.addWidget(self.generate_image_button)
-
-        self.image_generation_coming_soon_label = QLabel("Coming Soon!")
-        self.image_generation_coming_soon_label.setObjectName("coming-soon")
-        self.image_generation_coming_soon_label.setAlignment(Qt.AlignCenter)
-        self.image_generation_layout.addWidget(self.image_generation_coming_soon_label)
-
-        self.image_generation_section.set_content_layout(self.image_generation_layout)
-        self.advanced_features_layout.addWidget(self.image_generation_section)
-
-        # Model Builder Section
-        self.model_builder_section = CollapsibleSection("Model Builder")
-        self.model_builder_layout = QVBoxLayout()
-        self.model_builder_layout.setContentsMargins(10, 5, 10, 5)
-        self.model_builder_layout.setSpacing(5)
-
-        self.open_model_builder_button = QPushButton("Open Model Builder")
-        self.open_model_builder_button.setObjectName("openModelBuilderButton")
-        self.open_model_builder_button.setToolTip("Build custom AI models (Coming Soon)")
-        self.model_builder_layout.addWidget(self.open_model_builder_button)
-
-        self.model_discovery_label = QLabel("Discovered Models:")
-        self.model_builder_layout.addWidget(self.model_discovery_label)
-
-        self.model_list_display = QTextEdit(self)
-        self.model_list_display.setReadOnly(True)
-        self.model_list_display.setPlaceholderText("Models will appear here...")
-        self.model_builder_layout.addWidget(self.model_list_display)
-
-        self.model_builder_label = QLabel("Model Builder (Coming Soon)")
-        self.model_builder_layout.addWidget(self.model_builder_label)
-
-        self.model_testing_label = QLabel("Model Testing Playground (Coming Soon)")
-        self.model_builder_layout.addWidget(self.model_testing_label)
-
-        self.model_performance_label = QLabel("Model Performance Metrics (Coming Soon)")
-        self.model_builder_layout.addWidget(self.model_performance_label)
-
-        self.model_comparison_label = QLabel("Model Comparison (Coming Soon)")
-        self.model_builder_layout.addWidget(self.model_comparison_label)
-
-        self.model_builder_section.set_content_layout(self.model_builder_layout)
-        self.advanced_features_layout.addWidget(self.model_builder_section)
-
-        # Add missing coming soon labels for feature toggles
-        self.web_search_coming_soon_label = QLabel("🔍 Web Search - Coming Soon!")
-        self.web_search_coming_soon_label.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(self.web_search_coming_soon_label)
-        
-        self.model_builder_coming_soon_label = QLabel("🔧 Model Builder - Coming Soon!")
-        self.model_builder_coming_soon_label.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(self.model_builder_coming_soon_label)
-
         self.update_session_details()
         self.update_feature_visibility()
         self.populate_model_selection()
+
+    @property
+    def rag_manager(self):
+        if self._rag_manager is None:
+            self._rag_manager = RAGManager(self.document_storage_service, self.permission_service)
+        return self._rag_manager
+
+    @property
+    def model_manager(self):
+        if self._model_manager is None:
+            self._model_manager = ModelManager()
+        return self._model_manager
 
     def toggle_advanced_features(self):
         if self.advanced_features_toggle.isChecked():
@@ -274,21 +224,10 @@ class RightSidebar(QWidget):
         self.web_search_button.clicked.connect(self.perform_web_search)
         self.web_search_layout.addWidget(self.web_search_button)
 
-        self.web_search_filters_label = QLabel("Search Filters (Coming Soon)")
-        self.web_search_layout.addWidget(self.web_search_filters_label)
-
         self.web_search_results_display = QTextEdit(self)
         self.web_search_results_display.setReadOnly(True)
         self.web_search_results_display.setPlaceholderText("Search results will appear here...")
         self.web_search_layout.addWidget(self.web_search_results_display)
-
-        self.web_search_history_label = QLabel("Search History (Coming Soon)")
-        self.web_search_layout.addWidget(self.web_search_history_label)
-
-        self.web_search_history_list = QTextEdit(self)
-        self.web_search_history_list.setReadOnly(True)
-        self.web_search_history_list.setPlaceholderText("Search history will appear here...")
-        self.web_search_layout.addWidget(self.web_search_history_list)
 
         self.web_search_section.set_content_layout(self.web_search_layout)
         self.layout.addWidget(self.web_search_section)
@@ -346,15 +285,6 @@ class RightSidebar(QWidget):
         self.model_builder_section.set_content_layout(self.model_builder_layout)
         self.layout.addWidget(self.model_builder_section)
 
-        # Add missing coming soon labels for feature toggles
-        self.web_search_coming_soon_label = QLabel("🔍 Web Search - Coming Soon!")
-        self.web_search_coming_soon_label.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(self.web_search_coming_soon_label)
-        
-        self.model_builder_coming_soon_label = QLabel("🔧 Model Builder - Coming Soon!")
-        self.model_builder_coming_soon_label.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(self.model_builder_coming_soon_label)
-
         self.update_session_details()
         self.update_feature_visibility()
         self.populate_model_selection()
@@ -405,16 +335,17 @@ class RightSidebar(QWidget):
 
     def update_session_details(self):
         # Update profile
-        profile_name = os.getenv("DEFAULT_PROFILE", "default.yaml")
+        profile_name = self.config_manager.get("general.default_profile", "default.yaml")
         self.profile_label.setText(f"Profile: {profile_name}")
         self.profile_label.setToolTip(f"Current active profile: {profile_name}")
 
         # Update LLM model
-        self.model_label.setText(f"Model: {self.interpreter.llm.model}")
-        self.model_label.setToolTip(f"Current LLM model: {self.interpreter.llm.model}")
+        current_model = self.config_manager.get("llm.default_model", "N/A")
+        self.model_label.setText(f"Model: {current_model}")
+        self.model_label.setToolTip(f"Current LLM model: {current_model}")
 
         # Update API Key Status
-        api_key_set = bool(self.interpreter.llm.api_key)
+        api_key_set = bool(self.config_manager.get(f"api_keys.{current_model.split(': ')[0].lower()}", None))
         self.api_key_status_label.setText(f"API Key: {"Set" if api_key_set else "Not Set"}")
         self.api_key_status_label.setToolTip(f"API Key Status: {"Set" if api_key_set else "Not Set"}")
 
@@ -433,7 +364,7 @@ class RightSidebar(QWidget):
             formatted_results = ""
             for i, result in enumerate(results):
                 formatted_results += f"<b>{i+1}. {result.get('title', 'No Title')}</b><br>"
-                formatted_results += f"<a href=\"{result.get('url', '#')}\">{result.get('url', 'No URL')}</a><br>"
+                formatted_results += f"<a href='{result.get('url', '#')}'>{result.get('url', 'No URL')}</a><br>"
                 formatted_results += f"{result.get('snippet', 'No Snippet')}<br><br>"
             self.web_search_results_display.setHtml(formatted_results)
 
@@ -472,12 +403,16 @@ class RightSidebar(QWidget):
             self.send_message_to_chat_signal.emit(f"Failed to scrape article from {dummy_url}.")
 
     def load_documents_for_rag(self):
+        from PySide6.QtWidgets import QFileDialog
         print("Loading documents for RAG...")
         file_dialog = QFileDialog(self)
         file_paths, _ = file_dialog.getOpenFileNames(self, "Select Documents for RAG", "", "All Files (*.*);;PDF Files (*.pdf);;DOCX Files (*.docx);;Text Files (*.txt);;Markdown Files (*.md);;HTML Files (*.html)")
         if file_paths:
             for file_path in file_paths:
+                self.document_processing_status_label.setText(f"Processing: {os.path.basename(file_path)}")
+                QApplication.processEvents() # Update GUI
                 self._process_document_for_rag(file_path)
+            self.document_processing_status_label.setText("Processing Status: Idle")
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
@@ -493,24 +428,34 @@ class RightSidebar(QWidget):
 
     def _process_document_for_rag(self, file_path):
         print(f"Processing document for RAG: {file_path}")
-        # Determine file type and call appropriate loader
-        if file_path.lower().endswith(".pdf"):
+        file_extension = os.path.splitext(file_path)[1].lower()
+        file_type = "unknown"
+        if file_extension == ".pdf":
             text = self.rag_manager.load_pdf(file_path)
-        elif file_path.lower().endswith(".docx"):
+            file_type = "pdf"
+        elif file_extension == ".docx":
             text = self.rag_manager.load_docx(file_path)
-        elif file_path.lower().endswith(".txt"):
+            file_type = "docx"
+        elif file_extension == ".txt":
             text = self.rag_manager.load_txt(file_path)
-        elif file_path.lower().endswith(".md"):
+            file_type = "txt"
+        elif file_extension == ".md":
             text = self.rag_manager.load_md(file_path)
-        elif file_path.lower().endswith(".html"):
+            file_type = "markdown"
+        elif file_extension == ".html":
             text = self.rag_manager.load_html(file_path)
+            file_type = "html"
+        # Add more file types for code files if needed
+        elif file_extension in [".py", ".js", ".ts", ".java", ".cpp", ".h", ".c", ".cs", ".go", ".rs", ".rb", ".php", ".swift", ".kt", ".json", ".xml", ".yaml", ".yml", ".toml", ".ini", ".cfg"]:
+            text = self.rag_manager.load_txt(file_path) # Treat code files as plain text for now
+            file_type = "code"
         else:
             text = None
             print(f"Unsupported file type for RAG: {file_path}")
 
         if text:
-            self.rag_manager.add_document(text, {"source": file_path, "type": "loaded_document"})
-            self.document_list_display.append(f"- Loaded: {os.path.basename(file_path)}")
+            self.rag_manager.add_document(text, {"source": file_path, "type": file_type, "file_extension": file_extension})
+            self.document_list_display.append(f"- Loaded: {os.path.basename(file_path)} (Type: {file_type})")
             print(f"Document {file_path} added to RAG.")
         else:
             self.document_list_display.append(f"- Failed to load: {os.path.basename(file_path)}")

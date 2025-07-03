@@ -1,10 +1,15 @@
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QComboBox, QHBoxLayout, QCheckBox, QSpinBox, QTextEdit, QScrollArea, QWidget, QFileDialog
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QComboBox, QHBoxLayout, QCheckBox, QSpinBox, QTextEdit, QScrollArea, QWidget, QFileDialog, QInputDialog, QMessageBox
 from PySide6.QtCore import Qt
 import os
+from interpreter.core.config_manager import ConfigManager
+from .services.prompt_library import PromptLibrary
 
 class AgentBuilderDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, tts_service, config_manager, parent=None):
         super().__init__(parent)
+        self.tts_service = tts_service
+        self.config_manager = config_manager
+        self.prompt_library = PromptLibrary()
         self.setWindowTitle("Agent Builder")
         self.setGeometry(100, 100, 800, 600)
 
@@ -13,9 +18,12 @@ class AgentBuilderDialog(QDialog):
 
         self.create_general_settings_group()
         self.create_model_settings_group()
+        self.create_voice_settings_group()
         self.create_interpreter_settings_group()
         self.create_custom_instructions_group()
         self.create_tool_selection_group()
+        self.create_published_prompts_group() # New: Published Prompts
+        self.create_workflow_settings_group() # New: Workflow settings
         self.create_action_buttons()
 
     def create_general_settings_group(self):
@@ -26,6 +34,7 @@ class AgentBuilderDialog(QDialog):
         name_layout = QHBoxLayout()
         name_layout.addWidget(QLabel("Agent Name:"))
         self.agent_name_edit = QLineEdit("MyCustomAgent")
+        self.agent_name_edit.setToolTip("Choose a unique name for your AI agent (used as filename for the .py profile)")
         name_layout.addWidget(self.agent_name_edit)
         general_group_layout.addLayout(name_layout)
 
@@ -36,6 +45,7 @@ class AgentBuilderDialog(QDialog):
         self.profile_pic_path_edit.setReadOnly(True)
         profile_pic_layout.addWidget(self.profile_pic_path_edit)
         self.profile_pic_button = QPushButton("Browse...")
+        self.profile_pic_button.setToolTip("Select an image file (PNG, JPG, JPEG, SVG) for your agent's avatar")
         self.profile_pic_button.clicked.connect(self.select_profile_picture)
         profile_pic_layout.addWidget(self.profile_pic_button)
         general_group_layout.addLayout(profile_pic_layout)
@@ -50,17 +60,77 @@ class AgentBuilderDialog(QDialog):
             if selected_files:
                 self.profile_pic_path_edit.setText(selected_files[0])
 
+    def populate_model_combo(self):
+        # This will eventually load from a config file or API
+        self.available_models = {
+            "Groq": ["llama-3.1-70b-versatile", "mixtral-8x7b-32768"],
+            "OpenAI": ["gpt-4o", "gpt-3.5-turbo"],
+            "Ollama": ["llama3", "mistral"],
+        }
+        custom_models = self.config_manager.get("llm.custom_models", {})
+        for provider, models in custom_models.items():
+            if provider not in self.available_models:
+                self.available_models[provider] = []
+            self.available_models[provider].extend(models)
+        self.model_combo.clear()
+        for provider, models in self.available_models.items():
+            for model in models:
+                self.model_combo.addItem(f"{provider}: {model}")
+
+    def filter_models(self, text):
+        self.model_combo.clear()
+        search_text = text.lower()
+        for provider, models in self.available_models.items():
+            for model in models:
+                if search_text in model.lower() or search_text in provider.lower():
+                    self.model_combo.addItem(f"{provider}: {model}")
+
+    def add_custom_model(self):
+        # This will open a new dialog for adding custom model details
+        # For now, just a placeholder
+        model_name, ok = QInputDialog.getText(self, "Add Custom Model", "Enter model name (e.g., MyLocalModel):")
+        if ok and model_name:
+            api_base, ok_api = QInputDialog.getText(self, "Add Custom Model", "Enter API Base URL:")
+            if ok_api and api_base:
+                api_key, ok_key = QInputDialog.getText(self, "Add Custom Model", "Enter API Key (optional):")
+                if ok_key:
+                    custom_models = self.config_manager.get("llm.custom_models", {})
+                    if provider not in custom_models:
+                        custom_models[provider] = []
+                    custom_models[provider].append(model_name)
+                    self.config_manager.set("llm.custom_models", custom_models)
+                    self.populate_model_combo()
+                    # Select the newly added model
+                    self.model_combo.setCurrentText(f"{provider}: {model_name}")
+                    self.api_base_edit.setText(api_base)
+                    self.api_key_edit.setText(api_key)
+
+    def launch_custom_tool_wizard(self):
+        # Placeholder for launching a custom tool integration wizard
+        QMessageBox.information(self, "Custom Tool Wizard", "This will launch a wizard to integrate custom tools.")
+
     def create_model_settings_group(self):
         model_group_layout = QVBoxLayout()
         model_group_layout.addWidget(QLabel("<h3>LLM Settings</h3>"))
 
-        # Model selection
-        model_layout = QHBoxLayout()
-        model_layout.addWidget(QLabel("Model:"))
+        # Model Search and Selection
+        model_search_layout = QHBoxLayout()
+        model_search_layout.addWidget(QLabel("Search Model:"))
+        self.model_search_edit = QLineEdit()
+        self.model_search_edit.setPlaceholderText("Search for models...")
+        self.model_search_edit.textChanged.connect(self.filter_models)
+        model_search_layout.addWidget(self.model_search_edit)
+        model_group_layout.addLayout(model_search_layout)
+
+        model_selection_layout = QHBoxLayout()
+        model_selection_layout.addWidget(QLabel("Model:"))
         self.model_combo = QComboBox()
-        self.model_combo.addItems(["groq/llama-3.1-70b-versatile", "openai/gpt-4o", "ollama/llama3"]) # Placeholder models
-        model_layout.addWidget(self.model_combo)
-        model_group_layout.addLayout(model_layout)
+        self.populate_model_combo() # Call a new method to populate
+        model_selection_layout.addWidget(self.model_combo)
+        self.add_custom_model_button = QPushButton("Add Custom Model")
+        self.add_custom_model_button.clicked.connect(self.add_custom_model)
+        model_selection_layout.addWidget(self.add_custom_model_button)
+        model_group_layout.addLayout(model_selection_layout)
 
         # API Base
         api_base_layout = QHBoxLayout()
@@ -104,6 +174,20 @@ class AgentBuilderDialog(QDialog):
         model_group_layout.addWidget(self.supports_vision_checkbox)
 
         self.main_layout.addLayout(model_group_layout)
+
+    def create_voice_settings_group(self):
+        voice_group_layout = QVBoxLayout()
+        voice_group_layout.addWidget(QLabel("<h3>Voice Settings</h3>"))
+
+        voice_profile_layout = QHBoxLayout()
+        voice_profile_layout.addWidget(QLabel("Voice Profile:"))
+        self.voice_profile_combo = QComboBox()
+        for profile_name in self.tts_service.get_available_voice_profiles():
+            self.voice_profile_combo.addItem(profile_name)
+        voice_profile_layout.addWidget(self.voice_profile_combo)
+        voice_group_layout.addLayout(voice_profile_layout)
+
+        self.main_layout.addLayout(voice_group_layout)
 
     def create_interpreter_settings_group(self):
         interpreter_group_layout = QVBoxLayout()
@@ -150,19 +234,156 @@ class AgentBuilderDialog(QDialog):
         tool_group_layout = QVBoxLayout()
         tool_group_layout.addWidget(QLabel("<h3>Tools & Capabilities</h3>"))
 
-        self.shell_tool_checkbox = QCheckBox("Shell Tool")
-        self.shell_tool_checkbox.setChecked(True) # Default to enabled
-        tool_group_layout.addWidget(self.shell_tool_checkbox)
+        self.tools_data = {
+            "shell": {"name": "Shell Tool", "description": "Allows the agent to execute shell commands.", "default": True},
+            "browser": {"name": "Browser Tool", "description": "Enables the agent to browse the web.", "default": False},
+            "files": {"name": "Files Tool", "description": "Provides access to file system operations (read, write, delete).", "default": True},
+            # Add more tools as needed
+        }
 
-        self.browser_tool_checkbox = QCheckBox("Browser Tool")
-        self.browser_tool_checkbox.setChecked(False)
-        tool_group_layout.addWidget(self.browser_tool_checkbox)
+        for tool_id, tool_info in self.tools_data.items():
+            tool_layout = QHBoxLayout()
+            checkbox = QCheckBox(tool_info["name"])
+            checkbox.setChecked(tool_info["default"])
+            setattr(self, f"{tool_id}_tool_checkbox", checkbox) # Store reference to checkbox
+            tool_layout.addWidget(checkbox)
+            tool_layout.addWidget(QLabel(tool_info["description"]))
+            tool_group_layout.addLayout(tool_layout)
 
-        self.files_tool_checkbox = QCheckBox("Files Tool")
-        self.files_tool_checkbox.setChecked(True) # Default to enabled
-        tool_group_layout.addWidget(self.files_tool_checkbox)
+        # Custom Tool Integration Placeholder
+        custom_tool_layout = QHBoxLayout()
+        custom_tool_layout.addWidget(QLabel("Custom Tool Integration:"))
+        self.custom_tool_button = QPushButton("Launch Wizard")
+        self.custom_tool_button.clicked.connect(self.launch_custom_tool_wizard)
+        custom_tool_layout.addWidget(self.custom_tool_button)
+        tool_group_layout.addLayout(custom_tool_layout)
 
         self.main_layout.addLayout(tool_group_layout)
+
+    def create_published_prompts_group(self):
+        prompts_group_layout = QVBoxLayout()
+        prompts_group_layout.addWidget(QLabel("<h3>Published Prompts Library</h3>"))
+
+        # Category filter
+        category_layout = QHBoxLayout()
+        category_layout.addWidget(QLabel("Category:"))
+        self.category_combo = QComboBox()
+        self.category_combo.addItem("All Categories")
+        for category in self.prompt_library.get_all_categories():
+            self.category_combo.addItem(category)
+        self.category_combo.currentTextChanged.connect(self.filter_prompts_by_category)
+        category_layout.addWidget(self.category_combo)
+        prompts_group_layout.addLayout(category_layout)
+
+        # Prompt selection
+        prompt_selection_layout = QHBoxLayout()
+        prompt_selection_layout.addWidget(QLabel("Select Prompt:"))
+        self.published_prompt_combo = QComboBox()
+        self.populate_prompt_combo()
+        self.published_prompt_combo.currentTextChanged.connect(self.on_prompt_selected)
+        prompt_selection_layout.addWidget(self.published_prompt_combo)
+
+        self.browse_prompts_button = QPushButton("Preview")
+        self.browse_prompts_button.clicked.connect(self.preview_selected_prompt)
+        prompt_selection_layout.addWidget(self.browse_prompts_button)
+        prompts_group_layout.addLayout(prompt_selection_layout)
+
+        # Prompt description
+        self.prompt_description_label = QLabel("Select a prompt to see its description")
+        self.prompt_description_label.setWordWrap(True)
+        self.prompt_description_label.setStyleSheet("color: #888; font-style: italic; padding: 10px;")
+        prompts_group_layout.addWidget(self.prompt_description_label)
+
+        self.main_layout.addLayout(prompts_group_layout)
+
+    def populate_prompt_combo(self):
+        """Populate the prompt combo box with all available prompts."""
+        self.published_prompt_combo.clear()
+        for prompt_name in self.prompt_library.get_prompt_names():
+            self.published_prompt_combo.addItem(prompt_name)
+    
+    def filter_prompts_by_category(self, category):
+        """Filter prompts by selected category."""
+        self.published_prompt_combo.clear()
+        if category == "All Categories":
+            self.populate_prompt_combo()
+        else:
+            prompts = self.prompt_library.get_prompts_by_category(category)
+            for prompt in prompts.values():
+                self.published_prompt_combo.addItem(prompt["name"])
+    
+    def on_prompt_selected(self, prompt_name):
+        """Update description when a prompt is selected."""
+        if prompt_name:
+            prompt = self.prompt_library.get_prompt_by_name(prompt_name)
+            if prompt:
+                self.prompt_description_label.setText(f"<b>{prompt['category']}</b>: {prompt['description']}")
+                # Auto-fill system prompt
+                self.system_prompt_edit.setPlainText(prompt["system_prompt"])
+    
+    def preview_selected_prompt(self):
+        """Show a preview dialog of the selected prompt."""
+        prompt_name = self.published_prompt_combo.currentText()
+        if prompt_name:
+            prompt = self.prompt_library.get_prompt_by_name(prompt_name)
+            if prompt:
+                preview_dialog = QDialog(self)
+                preview_dialog.setWindowTitle(f"Preview: {prompt['name']}")
+                preview_dialog.setGeometry(200, 200, 600, 400)
+                
+                layout = QVBoxLayout(preview_dialog)
+                
+                # Header
+                header_label = QLabel(f"<h2>{prompt['name']}</h2>")
+                layout.addWidget(header_label)
+                
+                category_label = QLabel(f"<b>Category:</b> {prompt['category']}")
+                layout.addWidget(category_label)
+                
+                desc_label = QLabel(f"<b>Description:</b> {prompt['description']}")
+                desc_label.setWordWrap(True)
+                layout.addWidget(desc_label)
+                
+                tags_label = QLabel(f"<b>Tags:</b> {', '.join(prompt['tags'])}")
+                layout.addWidget(tags_label)
+                
+                # System prompt
+                prompt_label = QLabel("<b>System Prompt:</b>")
+                layout.addWidget(prompt_label)
+                
+                prompt_text = QTextEdit()
+                prompt_text.setPlainText(prompt["system_prompt"])
+                prompt_text.setReadOnly(True)
+                layout.addWidget(prompt_text)
+                
+                # Use button
+                use_button = QPushButton("Use This Prompt")
+                use_button.clicked.connect(lambda: self.use_prompt(prompt, preview_dialog))
+                layout.addWidget(use_button)
+                
+                preview_dialog.exec()
+    
+    def use_prompt(self, prompt, dialog):
+        """Use the selected prompt and close preview dialog."""
+        self.system_prompt_edit.setPlainText(prompt["system_prompt"])
+        self.published_prompt_combo.setCurrentText(prompt["name"])
+        dialog.accept()
+    
+    def browse_prompt_library(self):
+        """Legacy method - now handled by preview."""
+        self.preview_selected_prompt()
+
+    def create_workflow_settings_group(self):
+        workflow_group_layout = QVBoxLayout()
+        workflow_group_layout.addWidget(QLabel("<h3>Workflow Settings (Visual Editor Placeholder)</h3>"))
+
+        # Placeholder for the visual workflow editor
+        self.workflow_editor_placeholder = QLabel("Visual workflow editor will go here.")
+        self.workflow_editor_placeholder.setAlignment(Qt.AlignCenter)
+        self.workflow_editor_placeholder.setStyleSheet("border: 1px dashed #ccc; padding: 50px;")
+        workflow_group_layout.addWidget(self.workflow_editor_placeholder)
+
+        self.main_layout.addLayout(workflow_group_layout)
 
     def create_action_buttons(self):
         button_layout = QHBoxLayout()
@@ -185,7 +406,12 @@ class AgentBuilderDialog(QDialog):
         profile_pic_path = self.profile_pic_path_edit.text()
         system_prompt = self.system_prompt_edit.toPlainText()
 
-        model = self.model_combo.currentText()
+        model_full_text = self.model_combo.currentText()
+        if ": " in model_full_text:
+            provider, model = model_full_text.split(": ", 1)
+        else:
+            provider = "Unknown"
+            model = model_full_text
         api_base = self.api_base_edit.text()
         api_key = self.api_key_edit.text()
         context_window = self.context_window_spin.value()
@@ -200,87 +426,49 @@ class AgentBuilderDialog(QDialog):
         import_computer_api = self.import_computer_api_checkbox.isChecked()
 
         custom_instructions = self.custom_instructions_edit.toPlainText()
+        voice_profile = self.voice_profile_combo.currentText()
+        published_prompt = self.published_prompt_combo.currentText()
 
         # Collect selected tools
         selected_tools = []
-        if self.shell_tool_checkbox.isChecked():
-            selected_tools.append("shell")
-        if self.browser_tool_checkbox.isChecked():
-            selected_tools.append("browser")
-        if self.files_tool_checkbox.isChecked():
-            selected_tools.append("files")
+        for tool_id in self.tools_data.keys():
+            checkbox = getattr(self, f"{tool_id}_tool_checkbox")
+            if checkbox.isChecked():
+                selected_tools.append(tool_id)
 
-        # Generate Python file content
-        profile_content = f'''"""This is a custom generated Open Interpreter profile.
-"""
+        # Placeholder for saving workflow data
+        print("Workflow data would be saved here.")
 
-# Import the interpreter
-from interpreter import interpreter
+        # Save agent profile using ConfigManager
+        agent_config = {
+            "name": agent_name,
+            "profile_picture": profile_pic_path,
+            "system_prompt": system_prompt,
+            "llm": {
+                "model": model,
+                "api_base": api_base,
+                "api_key": api_key,
+                "context_window": context_window,
+                "max_tokens": max_tokens,
+                "supports_functions": supports_functions,
+                "supports_vision": supports_vision,
+            },
+            "interpreter": {
+                "offline": offline,
+                "loop": loop,
+                "auto_run": auto_run,
+                "os_mode": os_mode,
+                "import_computer_api": import_computer_api,
+            },
+            "voice": {
+                "profile": voice_profile,
+            },
+            "tools": selected_tools,
+            "custom_instructions": custom_instructions,
+            "published_prompt": published_prompt,
+        }
+        self.config_manager.set(f"agents.{agent_name}", agent_config)
+        QMessageBox.information(self, "Success", f"Agent profile '{agent_name}' saved successfully.")
+        self.accept() # Close dialog on success
 
-# You can import other libraries too
-from datetime import date
-
-# You can set variables
-today = date.today()
-
-# Agent Metadata
-interpreter.agent_name = "{agent_name}"
-interpreter.profile_picture = "{profile_pic_path}"
-
-# System Prompt
-interpreter.system_prompt = f"""\
-    {system_prompt.replace('"' , '\'')}
-    """
-
-# LLM Settings
-interpreter.llm.model = "{model}"
-interpreter.llm.context_window = {context_window}
-interpreter.llm.max_tokens = {max_tokens}
-interpreter.llm.api_base = "{api_base}"
-interpreter.llm.api_key = "{api_key}"
-interpreter.llm.supports_functions = {supports_functions}
-interpreter.llm.supports_vision = {supports_vision}
-
-
-# Interpreter Settings
-interpreter.offline = {offline}
-interpreter.loop = {loop}
-interpreter.auto_run = {auto_run}
-
-# Toggle OS Mode - https://docs.openinterpreter.com/guides/os-mode
-interpreter.os = {os_mode}
-
-# Import Computer API - https://docs.openinterpreter.com/code-execution/computer-api
-interpreter.computer.import_computer_api = {import_computer_api}
-
-# Tools
-interpreter.tools = {selected_tools}
-
-# Set Custom Instructions to improve your Interpreter\'s performance at a given task
-interpreter.custom_instructions = f"""\
-    {custom_instructions.replace('"' , '\'')}
-    """
-'''
-
-        # Determine file path
-        profiles_dir = "/home/ucadmin/Development/Colonel-Katie/interpreter/terminal_interface/profiles/custom"
-        os.makedirs(profiles_dir, exist_ok=True)
-        file_path = os.path.join(profiles_dir, f"{agent_name.replace(' ', '_').lower()}.py")
-
-        # Save the file
-        try:
-            with open(file_path, "w") as f:
-                f.write(profile_content)
-            print(f"Agent profile saved to {file_path}")
-            self.accept() # Close dialog on success
-        except Exception as e:
-            print(f"Error saving agent profile: {e}")
-
-if __name__ == '__main__':
-    from PySide6.QtWidgets import QApplication
-    import sys
-
-    app = QApplication(sys.argv)
-    dialog = AgentBuilderDialog()
-    dialog.exec()
-    sys.exit(app.exec())
+        

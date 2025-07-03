@@ -37,6 +37,110 @@ MODERN_STYLESHEET = """
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
+
+    /* Chat Header Styling - Glassmorphism */
+    ChatHeader {
+        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+            stop:0 rgba(255, 255, 255, 0.05),
+            stop:1 rgba(255, 255, 255, 0.02));
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        backdrop-filter: blur(20px);
+        margin: 8px;
+        padding: 10px 15px;
+    }
+
+    QLabel#chatHeaderLabel {
+        color: #00f5ff;
+        font-weight: 500;
+        font-size: 10pt;
+        padding: 5px 10px;
+        background: rgba(0, 245, 255, 0.1);
+        border-radius: 8px;
+    }
+
+    /* Chat Message Bubbles */
+    .user-message, .assistant-message, .computer-message, .error-message, .unknown-message {
+        padding: 12px 18px;
+        border-radius: 18px;
+        margin-bottom: 10px;
+        max-width: 80%;
+        word-wrap: break-word;
+        font-size: 10.5pt;
+        line-height: 1.5;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .user-message {
+        background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #8b5cf6, stop:1 #a855f7);
+        color: #ffffff;
+        margin-left: auto; /* Align to right */
+        border-bottom-right-radius: 4px;
+    }
+
+    .assistant-message {
+        background: rgba(255, 255, 255, 0.08);
+        color: #f8f9fa;
+        margin-right: auto; /* Align to left */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom-left-radius: 4px;
+    }
+
+    .computer-message {
+        background: rgba(0, 245, 255, 0.15);
+        color: #e0e0e0;
+        margin-right: auto;
+        border: 1px solid rgba(0, 245, 255, 0.2);
+        border-bottom-left-radius: 4px;
+    }
+
+    .error-message {
+        background: rgba(255, 99, 71, 0.15);
+        color: #ff6347;
+        margin-right: auto;
+        border: 1px solid rgba(255, 99, 71, 0.2);
+        border-bottom-left-radius: 4px;
+    }
+
+    .unknown-message {
+        background: rgba(255, 255, 0, 0.1);
+        color: #ffff00;
+        margin-right: auto;
+        border: 1px solid rgba(255, 255, 0, 0.2);
+        border-bottom-left-radius: 4px;
+    }
+
+    /* Code blocks within messages */
+    .user-message pre, .assistant-message pre, .computer-message pre {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        padding: 10px;
+        overflow-x: auto;
+        margin-top: 10px;
+    }
+
+    .user-message code, .assistant-message code, .computer-message code {
+        font-family: "JetBrains Mono", "Fira Code", monospace;
+        font-size: 9.5pt;
+        line-height: 1.4;
+    }
+
+    /* Markdown elements within messages */
+    .user-message h1, .assistant-message h1, .computer-message h1 { color: inherit; font-size: 1.5em; margin-top: 0.8em; margin-bottom: 0.4em; }
+    .user-message h2, .assistant-message h2, .computer-message h2 { color: inherit; font-size: 1.3em; margin-top: 0.7em; margin-bottom: 0.3em; }
+    .user-message h3, .assistant-message h3, .computer-message h3 { color: inherit; font-size: 1.1em; margin-top: 0.6em; margin-bottom: 0.2em; }
+    .user-message strong, .assistant-message strong, .computer-message strong { font-weight: bold; }
+    .user-message em, .assistant-message em, .computer-message em { font-style: italic; }
+    .user-message ul, .assistant-message ul, .computer-message ul, .user-message ol, .assistant-message ol, .computer-message ol { margin-left: 20px; padding-left: 0; }
+    .user-message li, .assistant-message li, .computer-message li { margin-bottom: 5px; }
+    .user-message a, .assistant-message a, .computer-message a { color: #00f5ff; text-decoration: underline; }
+    .user-message blockquote, .assistant-message blockquote, .computer-message blockquote {
+        border-left: 4px solid rgba(255, 255, 255, 0.3);
+        padding-left: 10px;
+        margin-left: 0;
+        font-style: italic;
+        color: rgba(255, 255, 255, 0.7);
+    }
     
     QListWidget {
         background: transparent;

@@ -11,17 +11,19 @@ from dotenv import load_dotenv
 from .feature_toggles import is_feature_enabled, ENABLE_RAG, ENABLE_MANY_MODELS_CONVERSATIONS
 from .modern_theme import MODERN_STYLESHEET
 
-from .settings_dialog import SettingsDialog
-from .profiles_dialog import ProfilesDialog
+
 from .conversation_history import ConversationHistory
 from .chat_window import ChatWindow
 from .worker import InterpreterWorker, IndexingWorker
 from .right_sidebar import RightSidebar
 from .services.model_manager import ModelManager
 from .services.chat_manager import ChatManager
-from .services.global_config import GlobalConfig
-from .agent_builder_dialog import AgentBuilderDialog
+from interpreter.core.config_manager import ConfigManager
+
 from .components.model_selector import ModelSelector
+from .components.enhanced_status_bar import EnhancedStatusBar
+from .export_dialog import ExportDialog
+from .splash_screen import SplashScreen
 
 load_dotenv()
 
@@ -29,12 +31,23 @@ class ColonelKDEApp(QMainWindow):
     def __init__(self):
         super().__init__()
         
+        # Initialize splash screen
+        icon_path = "/home/ucadmin/Development/Colonel-Katie/colonel-katie-icon.png"
+        if os.path.exists(icon_path):
+            from PySide6.QtGui import QPixmap
+            pixmap = QPixmap(icon_path).scaled(400, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.splash_screen = SplashScreen(pixmap)
+            self.splash_screen.show()
+            self.splash_screen.set_progress(20, "Initializing...")
+        else:
+            self.splash_screen = None
+        
         # Initialize OpenInterpreter and services
         self.interpreter = OpenInterpreter()
-        self.model_manager = ModelManager()
-        self.chat_manager = ChatManager(self.model_manager, self.interpreter)
+        self._model_manager = None
+        self.config_manager = ConfigManager()
         
-        self.setWindowTitle("Colonel Katie (LtCol Katie) - AI Assistant")
+        self.setWindowTitle("Colonel Katie - AI Agent Platform")
         self.setMinimumSize(800, 600) # Set minimum window size
         self.setGeometry(100, 100, 1200, 800) # Increased size for three columns
         self.setWindowIcon(QIcon("/home/ucadmin/Development/Colonel-Katie/colonel-katie-icon.png"))
@@ -55,12 +68,19 @@ class ColonelKDEApp(QMainWindow):
         self.splitter.addWidget(self.conversation_history)
 
         # Right Sidebar for Settings/Context (create first so chat_window can reference it)
-        self.right_sidebar = RightSidebar(self.interpreter)
+        self.right_sidebar = RightSidebar(self.interpreter, self.config_manager)
         self.right_sidebar.setFixedWidth(200) # Fixed width for sidebar
+
+        # Initialize ChatManager after sidebar is created
+        self.chat_manager = ChatManager(self.model_manager, self.interpreter, self.right_sidebar.tts_service, self.right_sidebar.stt_service, self.right_sidebar.rag_manager, self.config_manager)
 
         # Main Content Area (Chat Window)
         self.chat_window = ChatWindow(self.chat_manager, self.right_sidebar.function_registry)
+        self.chat_window.stt_service = self.right_sidebar.stt_service # Pass STT service
+        self.chat_window.tts_service = self.right_sidebar.tts_service # Pass TTS service
         self.splitter.addWidget(self.chat_window)
+
+        self.chat_window.speak_message_signal.connect(self.speak_message_content)
         
         # Add right sidebar to splitter
         self.splitter.addWidget(self.right_sidebar)
@@ -74,12 +94,27 @@ class ColonelKDEApp(QMainWindow):
         self.right_sidebar.index_button.clicked.connect(self.start_indexing)
         self.right_sidebar.model_selected_signal.connect(self.chat_manager.set_current_model)
         self.right_sidebar.send_message_to_chat_signal.connect(self.chat_window.append_output)
+        self.right_sidebar.model_selected_signal.connect(self.chat_window.chat_header.update_model_indicator)
 
         # Connect resize event for responsive design
         self.resizeEvent = self.on_resize_event
 
         self.create_menu_bar()
+        self.setup_keyboard_shortcuts()
+        self.setup_status_bar()
         self.apply_stylesheet()
+
+        if self.splash_screen:
+            self.splash_screen.set_progress(100, "Application loaded!")
+            from PySide6.QtWidgets import QApplication
+            QApplication.processEvents()
+            self.splash_screen.finish(self)
+
+    @property
+    def model_manager(self):
+        if self._model_manager is None:
+            self._model_manager = ModelManager()
+        return self._model_manager
 
     def on_resize_event(self, event):
         # Auto-collapse sidebars on narrow screens
@@ -101,7 +136,7 @@ class ColonelKDEApp(QMainWindow):
         self.tray_icon = QSystemTrayIcon(self)
         katie_icon = QIcon(os.path.join(os.path.dirname(__file__), "..", "..", "colonel-katie-icon.png"))
         self.tray_icon.setIcon(katie_icon)
-        self.tray_icon.setToolTip("Colonel Katie (LtCol Katie) - Your AI Assistant")
+        self.tray_icon.setToolTip("Colonel Katie - AI Agent Platform")
 
         tray_menu = QMenu()
         
@@ -110,7 +145,7 @@ class ColonelKDEApp(QMainWindow):
         show_hide_action.triggered.connect(self.toggle_visibility)
         tray_menu.addAction(show_hide_action)
         
-        # Quick Chat action (for future implementation)
+        # Quick Chat action
         quick_chat_action = QAction("Quick Chat (Ctrl+Space)", self)
         quick_chat_action.setEnabled(False)  # Placeholder for now
         tray_menu.addAction(quick_chat_action)
@@ -141,9 +176,19 @@ class ColonelKDEApp(QMainWindow):
         if self.isVisible():
             self.hide()
         else:
-            self.show()
-            self.raise_()
+            self.showNormal()
             self.activateWindow()
+
+    def closeEvent(self, event):
+        if self.tray_icon.isVisible():
+            self.hide()
+            event.ignore() # Ignore the close event to minimize to tray
+        else:
+            super().closeEvent(event) # Proceed with actual close if no tray icon
+
+    def really_quit(self):
+        self.tray_icon.hide()
+        self.close()
     
     def show_about_dialog(self):
         from PySide6.QtWidgets import QMessageBox
@@ -151,17 +196,18 @@ class ColonelKDEApp(QMainWindow):
         about.setWindowTitle("About Colonel Katie")
         about.setTextFormat(Qt.RichText)
         about.setText("""
-        <h2>Colonel Katie (LtCol Katie)</h2>
-        <p><b>Your Personal AI Assistant</b></p>
-        <p>A powerful AI assistant built on The Colonel codebase with advanced features:</p>
+        <h2>Colonel Katie</h2>
+        <p><b>AI Agent Development Platform</b></p>
+        <p>A comprehensive AI agent platform with professional features:</p>
         <ul>
-        <li>Multi-model conversations</li>
-        <li>RAG document processing</li>
-        <li>Web search integration</li>
-        <li>Quick chat overlay (Ctrl+Space)</li>
-        <li>System tray integration</li>
+        <li>Visual Agent Builder with prompt library</li>
+        <li>Multi-provider model support</li>
+        <li>RAG document processing & knowledge bases</li>
+        <li>Voice interaction & memory management</li>
+        <li>Conversation export & system integration</li>
         </ul>
-        <p><i>Serving you with honor and efficiency!</i> 🦄⚡</p>
+        <p><i>Empowering AI development with honor and efficiency!</i> 🦄⚡</p>
+        <p><small>Version 2.0 - Production Ready</small></p>
         """)
         about.setStandardButtons(QMessageBox.Ok)
         about.exec()
@@ -171,6 +217,9 @@ class ColonelKDEApp(QMainWindow):
 
         # File Menu
         file_menu = menu_bar.addMenu("&File")
+        export_action = file_menu.addAction("&Export Conversation")
+        export_action.triggered.connect(self.show_export_dialog)
+        export_action.setToolTip("Export current conversation")
         exit_action = file_menu.addAction("&Exit")
         exit_action.triggered.connect(self.close)
         exit_action.setToolTip("Exit the application")
@@ -180,26 +229,195 @@ class ColonelKDEApp(QMainWindow):
         options_menu = menu_bar.addMenu("&Options")
 
         many_models_action = options_menu.addAction("Many Models Conversations")
-        many_models_action.setToolTip("Engage with multiple models simultaneously (Coming Soon)")
+        many_models_action.setToolTip("Engage with multiple models simultaneously")
         if not is_feature_enabled(ENABLE_MANY_MODELS_CONVERSATIONS):
             many_models_action.setEnabled(False)
 
         agent_builder_action = options_menu.addAction("Agent Builder")
         agent_builder_action.triggered.connect(self.show_agent_builder)
         agent_builder_action.setToolTip("Create and manage AI agent profiles")
+    
+    def setup_keyboard_shortcuts(self):
+        """Setup application-wide keyboard shortcuts."""
+        # Focus chat input (Ctrl+L)
+        focus_input_shortcut = QKeySequence("Ctrl+L")
+        focus_input_action = QAction(self)
+        focus_input_action.setShortcut(focus_input_shortcut)
+        focus_input_action.triggered.connect(self.focus_chat_input)
+        self.addAction(focus_input_action)
+        
+        # Clear chat (Ctrl+K)
+        clear_chat_shortcut = QKeySequence("Ctrl+K")
+        clear_chat_action = QAction(self)
+        clear_chat_action.setShortcut(clear_chat_shortcut)
+        clear_chat_action.triggered.connect(self.clear_chat)
+        self.addAction(clear_chat_action)
+        
+        # Toggle sidebars (F9)
+        toggle_sidebars_shortcut = QKeySequence("F9")
+        toggle_sidebars_action = QAction(self)
+        toggle_sidebars_action.setShortcut(toggle_sidebars_shortcut)
+        toggle_sidebars_action.triggered.connect(self.toggle_sidebars)
+        self.addAction(toggle_sidebars_action)
+        
+        # Open Agent Builder (Ctrl+Shift+A)
+        agent_builder_shortcut = QKeySequence("Ctrl+Shift+A")
+        agent_builder_action = QAction(self)
+        agent_builder_action.setShortcut(agent_builder_shortcut)
+        agent_builder_action.triggered.connect(self.show_agent_builder)
+        self.addAction(agent_builder_action)
+        
+        # Export conversation (Ctrl+E)
+        export_shortcut = QKeySequence("Ctrl+E")
+        export_action = QAction(self)
+        export_action.setShortcut(export_shortcut)
+        export_action.triggered.connect(self.show_export_dialog)
+        self.addAction(export_action)
+    
+    def focus_chat_input(self):
+        """Focus the chat input field."""
+        self.chat_window.input_field.setFocus()
+        self.chat_window.input_field.selectAll()
+    
+    def clear_chat(self):
+        """Clear the chat output display."""
+        self.chat_window.output_display.clear()
+        self.chat_window.message_data.clear()
+    
+    def toggle_sidebars(self):
+        """Toggle visibility of both sidebars."""
+        left_visible = self.conversation_history.isVisible()
+        right_visible = self.right_sidebar.isVisible()
+        
+        if left_visible or right_visible:
+            self.conversation_history.hide()
+            self.right_sidebar.hide()
+        else:
+            self.conversation_history.show()
+            self.right_sidebar.show()
+    
+    def setup_status_bar(self):
+        """Setup the enhanced status bar."""
+        self.status_bar = EnhancedStatusBar(self)
+        self.setStatusBar(self.status_bar)
+        
+        # Connect status updates
+        self.status_bar.set_status_message("Colonel Katie Ready for Action! 🦄⚡")
+        
+        # Update status bar when model changes
+        self.right_sidebar.model_selected_signal.connect(self.update_status_bar_model)
+    
+    def update_status_bar_model(self, model_name):
+        """Update status bar when model is selected."""
+        if ":" in model_name:
+            provider, model = model_name.split(":", 1)
+            self.status_bar.set_model_status(model.strip(), provider.strip())
+        else:
+            self.status_bar.set_model_status(model_name)
+
+    def show_export_dialog(self):
+        dialog = ExportDialog(self.chat_manager, self)
+        if dialog.exec() == QDialog.Accepted:
+            export_options = dialog.get_export_options()
+            self.perform_export(export_options)
+
+    def perform_export(self, options):
+        export_format = options["format"]
+        scope = options["scope"]
+        output_path = options["output_path"]
+        include_metadata = options["include_metadata"]
+        include_timestamps = options["include_timestamps"]
+
+        if scope == "current":
+            conversation = self.chat_manager.get_current_conversation()
+            if not conversation:
+                self.chat_window.append_output({"type": "error", "content": "No active conversation to export."})
+                return
+            
+            if export_format == "json":
+                # Ensure output_path has a .json extension
+                if not output_path.lower().endswith(".json"):
+                    output_path += ".json"
+                self.chat_manager.export_conversation_json(conversation["id"], output_path)
+                self.chat_window.append_output({"type": "message", "content": f"Conversation exported to JSON: {output_path}"})
+            elif export_format == "markdown":
+                # Implement Markdown export for current conversation
+                self.export_conversation_to_markdown(conversation, output_path, include_metadata, include_timestamps)
+                self.chat_window.append_output({"type": "message", "content": f"Conversation exported to Markdown: {output_path}"})
+            elif export_format == "pdf":
+                self.chat_window.append_output({"type": "message", "content": "PDF export is not yet fully implemented."})
+        elif scope == "all":
+            # Implement bulk export
+            self.bulk_export_conversations(export_format, output_path, include_metadata, include_timestamps)
+            self.chat_window.append_output({"type": "message", "content": f"Bulk export initiated to {output_path} in {export_format} format."})
+
+    def export_conversation_to_markdown(self, conversation, output_path, include_metadata, include_timestamps):
+        markdown_content = ""
+        if include_metadata:
+            markdown_content += f"# Conversation ID: {conversation['id']}\n"
+            markdown_content += f"**Created At**: {conversation.get('created_at', 'N/A')}\n"
+            markdown_content += f"**Last Updated**: {conversation.get('last_updated', 'N/A')}\n\n"
+
+        for message in conversation["messages"]:
+            role = message.get("role", "unknown")
+            content = message.get("content", "")
+            timestamp = message.get("timestamp", "N/A")
+
+            if include_timestamps:
+                markdown_content += f"**[{timestamp}]** "
+
+            if role == "user":
+                markdown_content += f"**User**: {content}\n\n"
+            elif role == "assistant":
+                markdown_content += f"**Assistant**: {content}\n\n"
+            elif role == "computer":
+                markdown_content += f"**Computer Output**:\n```\n{content}\n```\n\n"
+            elif role == "error":
+                markdown_content += f"**Error**: {content}\n\n"
+            else:
+                markdown_content += f"**{role.capitalize()}**: {content}\n\n"
+        
+        # Ensure output_path has a .md extension
+        if not output_path.lower().endswith(".md"):
+            output_path += ".md"
+
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(markdown_content)
+
+    def bulk_export_conversations(self, export_format, output_directory, include_metadata, include_timestamps):
+        # Ensure output_directory exists
+        os.makedirs(output_directory, exist_ok=True)
+
+        all_conversation_ids = self.chat_manager.conversation_manager.list_all_conversation_ids()
+        for conv_id in all_conversation_ids:
+            conversation = self.chat_manager.conversation_manager.get_conversation(conv_id)
+            if conversation:
+                filename = f"conversation_{conv_id}"
+                if export_format == "json":
+                    output_file = os.path.join(output_directory, f"{filename}.json")
+                    self.chat_manager.export_conversation_json(conv_id, output_file)
+                elif export_format == "markdown":
+                    output_file = os.path.join(output_directory, f"{filename}.md")
+                    self.export_conversation_to_markdown(conversation, output_file, include_metadata, include_timestamps)
+                elif export_format == "pdf":
+                    # Placeholder for PDF bulk export
+                    pass
 
     def show_settings(self):
+        from .settings_dialog import SettingsDialog
         dialog = SettingsDialog(self)
         dialog.settings_saved.connect(self.chat_window.output_display.clear) # Clear chat on settings change for now
         dialog.settings_saved.connect(self.right_sidebar.update_session_details) # Update right sidebar
         dialog.exec()
 
     def show_profiles(self):
+        from .profiles_dialog import ProfilesDialog
         dialog = ProfilesDialog(self)
         dialog.exec()
 
     def show_agent_builder(self):
-        dialog = AgentBuilderDialog(self)
+        from .agent_builder_dialog import AgentBuilderDialog
+        dialog = AgentBuilderDialog(self.right_sidebar.tts_service, self.config_manager, self)
         dialog.exec()
 
     def apply_modern_stylesheet(self):
@@ -420,23 +638,31 @@ class ColonelKDEApp(QMainWindow):
             print("MainWindow: Connected worker.new_chunk to chat_window.append_output.")
             self.worker.finished.connect(self.worker.deleteLater)
             print("MainWindow: Connected worker.finished to worker.deleteLater.")
-            self.worker.finished.connect(self.update_connection_status)
+            self.worker.finished.connect(lambda: self.update_connection_status(self.chat_window.chat_header))
             self.worker.error.connect(self.chat_window.append_output) # Display errors in chat window
             print("MainWindow: Connected worker.error to chat_window.append_output.")
-            self.worker.error.connect(self.update_connection_status)
+            self.worker.error.connect(lambda: self.update_connection_status(self.chat_window.chat_header))
             self.worker.memories_extracted.connect(self.right_sidebar.update_memory_summary) # Update memory summary
             self.worker.start()
             print("MainWindow: Started InterpreterWorker.")
-            self.connection_status_label.setText("Status: Processing...")
+            self.chat_window.show_typing_indicator(True)
+            
         except Exception as e:
             self.chat_window.append_output({"type": "error", "content": f"Error sending command from main window: {e}\n"})
-            self.connection_status_label.setText("Status: Error")
+            
 
-    def update_connection_status(self):
+    def speak_message_content(self, message_id):
+        if message_id in self.chat_window.message_data:
+            message = self.chat_window.message_data[message_id]
+            content = message.get("content", "")
+            self.chat_window.tts_service.speak(content)
+
+    def update_connection_status(self, chat_header):
         if self.worker.isRunning():
-            self.connection_status_label.setText("Status: Processing...")
+            chat_header.update_connection_status("Processing...")
+            self.chat_window.show_typing_indicator(True)
         else:
-            self.connection_status_label.setText("Status: Idle")
+            chat_header.update_connection_status("Idle")
 
     def load_conversation(self, file_path):
         try:
@@ -446,6 +672,10 @@ class ColonelKDEApp(QMainWindow):
             self.interpreter.messages = messages # Set interpreter's messages to the loaded history
             self.interpreter.conversation_filename = os.path.basename(file_path) # Set the current conversation filename
             self.interpreter.last_messages_count = len(messages) # Update last_messages_count for proper new message tracking
+            # Load and apply conversation-specific settings to QuickSettingsPanel
+            conversation_settings = self.chat_manager.get_chat_settings()
+            if conversation_settings:
+                self.chat_window.quick_settings_panel.set_settings(conversation_settings)
         except Exception as e:
             self.chat_window.append_output({"type": "error", "content": f"Error loading conversation: {e}\n"})
 

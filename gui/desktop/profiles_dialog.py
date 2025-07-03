@@ -52,4 +52,4 @@ class ProfilesDialog(QDialog):
             self.parent().chat_window.append_output(f"Default profile set to: {selected_profile}")
             self.accept() # Close dialog
         except Exception as e:
-            self.parent().chat_window.append_output(f"Error setting default profile: {e}")
+            self.parent().chat_window.append_output({"type": "error", "content": f"Error setting default profile: {e}"})

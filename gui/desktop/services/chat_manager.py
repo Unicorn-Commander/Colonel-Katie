@@ -1,19 +1,18 @@
 import json
 import uuid
 from .conversation_manager import ConversationManager
+from .rag_config import RAGConfig
 
 class ChatManager:
-    def __init__(self, model_manager, interpreter_instance):
+    def __init__(self, model_manager, interpreter_instance, tts_service, stt_service, rag_manager, config_manager):
         self.model_manager = model_manager
         self.current_model = None
         self.interpreter = interpreter_instance
+        self.tts_service = tts_service
+        self.stt_service = stt_service
+        self.rag_manager = rag_manager
         self.conversation_manager = ConversationManager()
-        self.default_chat_settings = {
-            "temperature": 0.7,
-            "max_tokens": 4096,
-            "system_prompt": "You are a helpful AI assistant.",
-            "auto_run": False
-        }
+        self.config_manager = config_manager
 
     def set_current_model(self, model_name):
         # In a real implementation, you'd validate model_name against available models
@@ -22,6 +21,7 @@ class ChatManager:
         found_model = next((m for m in available_models if m['name'] == model_name), None)
         if found_model:
             self.current_model = found_model
+            self.interpreter.llm.model = found_model['name'] # Update interpreter's LLM model
             print(f"Current model set to: {self.current_model['name']} ({self.current_model['source']})")
             return True
         else:
@@ -32,7 +32,7 @@ class ChatManager:
         return self.current_model
 
     def new_conversation(self):
-        return self.conversation_manager.new_conversation(self.default_chat_settings)
+        return self.conversation_manager.new_conversation(self.config_manager.get("chat.default_settings", {}))
 
     def add_message(self, role, content):
         self.conversation_manager.add_message(role, content)
@@ -53,11 +53,43 @@ class ChatManager:
         return self.conversation_manager.load_chat_settings(conversation_id)
 
     def set_default_chat_settings(self, settings):
-        self.default_chat_settings = settings
+        self.config_manager.set("chat.default_settings", settings)
         print("Default chat settings updated.")
 
     def get_default_chat_settings(self):
-        return self.default_chat_settings
+        return self.config_manager.get("chat.default_settings", {})
+
+    def update_chat_settings(self, settings):
+        current_conversation = self.conversation_manager.get_current_conversation()
+        if current_conversation:
+            self.conversation_manager.save_chat_settings(current_conversation["id"], settings)
+            # Apply TTS settings immediately
+            if "tts_enabled" in settings:
+                self.tts_service.tts_enabled = settings["tts_enabled"]
+            if "speech_speed" in settings:
+                self.tts_service.engine.setProperty('rate', int(self.tts_service.engine.getProperty('rate') * settings["speech_speed"])) # Apply speed
+            if "speech_pitch" in settings:
+                # pyttsx3 doesn't have direct pitch control, but we can simulate it or use ElevenLabs
+                pass # Placeholder for pitch
+            if "wake_word_enabled" in settings:
+                if settings["wake_word_enabled"]:
+                    self.stt_service.start_wake_word_detection()
+                else:
+                    self.stt_service.stop_wake_word_detection()
+            if "rag_config" in settings:
+                rag_config_dict = settings["rag_config"]
+                rag_config = RAGConfig.from_dict(rag_config_dict)
+                self.rag_manager.set_chunking_strategy(rag_config.chunking_strategy, rag_config.chunk_size, rag_config.chunk_overlap)
+                self.rag_manager.set_embedding_model(rag_config.embedding_model_name)
+                self.rag_manager.set_vector_database(rag_config.vector_database_type)
+                self.rag_manager.set_retrieval_parameters(rag_config.retrieval_top_k, rag_config.retrieval_similarity_threshold)
+            print(f"Updated settings for conversation {current_conversation["id"]}: {settings}")
+
+    def get_chat_settings(self):
+        current_conversation = self.conversation_manager.get_current_conversation()
+        if current_conversation:
+            return self.conversation_manager.load_chat_settings(current_conversation["id"])
+        return self.get_default_chat_settings()
 
     def execute_code(self, code):
         # This is a placeholder. Actual integration with OpenInterpreter's

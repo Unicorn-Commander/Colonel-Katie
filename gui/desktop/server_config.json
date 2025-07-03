@@ -1,0 +1,9 @@
+{
+    "auto_start_services": {
+        "RAG Service": false,
+        "TTS Service": true,
+        "STT Service": true,
+        "Workflow Engine": false,
+        "Memory Service": true
+    }
+}

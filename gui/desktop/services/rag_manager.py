@@ -6,24 +6,43 @@ import chromadb
 import uuid
 from sentence_transformers import SentenceTransformer
 import google.generativeai as genai
+from .rag_config import RAGConfig
+
+import nltk
+from nltk.tokenize import sent_tokenize
 
 class RAGManager:
-    def __init__(self, embedding_model_name="all-MiniLM-L6-v2"):
+    _embedding_model_cache = {}
+
+    def __init__(self, document_storage_service, permission_service, rag_config=None, embedding_model_name="all-MiniLM-L6-v2"):
+        self.document_storage_service = document_storage_service
+        self.permission_service = permission_service
+        self.rag_config = rag_config if rag_config else RAGConfig(embedding_model_name=embedding_model_name)
         self.collections = {}
         self.active_collection = None
-        self.embedding_model_name = embedding_model_name
-        self.embedding_model = SentenceTransformer(embedding_model_name)
-        self.chunk_size = 500
-        self.chunk_overlap = 50
-        self.vector_database_type = "chromadb"
-        self.retrieval_top_k = 5
-        self.retrieval_similarity_threshold = 0.7
+        self.embedding_model = self._get_embedding_model(self.rag_config.embedding_model_name)
 
         # Initialize a default collection
-        self.create_collection("default", self.embedding_model_name)
+        self.create_collection("default", self.rag_config.embedding_model_name, agent_id="default_agent")
         self.switch_collection("default")
 
-    def create_collection(self, name, embedding_model_name=None):
+        try:
+            nltk.data.find('tokenizers/punkt')
+        except (LookupError, AttributeError):
+            try:
+                print("📦 Downloading NLTK punkt tokenizer...")
+                nltk.download('punkt')
+                print("✅ NLTK punkt downloaded successfully")
+            except Exception as e:
+                print(f"⚠️  NLTK download failed: {e}")
+                print("   RAG features may be limited")
+
+    def _get_embedding_model(self, model_name):
+        if model_name not in self._embedding_model_cache:
+            self._embedding_model_cache[model_name] = SentenceTransformer(model_name)
+        return self._embedding_model_cache[model_name]
+
+    def create_collection(self, name, embedding_model_name=None, agent_id=None):
         if name in self.collections:
             print(f"Collection '{name}' already exists.")
             return False
@@ -33,8 +52,9 @@ class RAGManager:
         collection = client.get_or_create_collection(name=name)
         self.collections[name] = {
             "collection_obj": collection,
-            "embedding_model_name": embedding_model_name if embedding_model_name else self.embedding_model_name,
-            "embedding_model": SentenceTransformer(embedding_model_name if embedding_model_name else self.embedding_model_name)
+            "embedding_model_name": embedding_model_name if embedding_model_name else self.rag_config.embedding_model_name,
+            "embedding_model": self._get_embedding_model(embedding_model_name if embedding_model_name else self.rag_config.embedding_model_name),
+            "agent_id": agent_id # Store agent ID with the collection
         }
         print(f"Collection '{name}' created.")
         return True
@@ -48,7 +68,9 @@ class RAGManager:
         print(f"Switched to collection '{name}'.")
         return True
 
-    def list_collections(self):
+    def list_collections(self, agent_id=None):
+        if agent_id:
+            return [name for name, details in self.collections.items() if details.get("agent_id") == agent_id]
         return list(self.collections.keys())
 
     def delete_collection(self, name):
@@ -62,6 +84,17 @@ class RAGManager:
             self.active_collection = None
             self.embedding_model = None
         print(f"Collection '{name}' deleted.")
+        if self.active_collection and self.active_collection.name == name:
+            self.active_collection = None
+            self.embedding_model = None
+        # Log document deletion
+        self.permission_service._log_audit(
+            user_id="system", # Assuming system action for now
+            action="delete_collection",
+            resource_type="collection",
+            resource_id=name,
+            details={'collection_name': name}
+        )
         return True
 
     def add_document(self, text, metadata=None):
@@ -74,11 +107,44 @@ class RAGManager:
             ids = [str(uuid.uuid4()) for _ in chunks]
             metadatas = [metadata if metadata else {} for _ in chunks]
 
+            # Check if document with this source already exists and delete it
+            existing_docs = self.active_collection.get(where={"source": metadata.get("source")})
+            if existing_docs and existing_docs['ids']:
+                self.active_collection.delete(ids=existing_docs['ids'])
+                self.document_storage_service.delete_document_metadata(existing_docs['ids'][0]) # Delete from SQLite
+
             self.active_collection.add(
                 documents=chunks,
                 embeddings=embeddings,
                 metadatas=metadatas,
                 ids=ids
+            )
+            # Store document metadata in the DocumentStorageService
+            self.document_storage_service.add_document_metadata(
+                doc_id=ids[0], # Use the first chunk's ID as the document ID
+                filename=metadata.get("source", "unknown_file"),
+                filepath=metadata.get("source", "unknown_path"),
+                agent_id="default_agent", # Placeholder for now
+                file_size=len(text.encode('utf-8')), # Approximate size
+                file_type=metadata.get("type", "unknown"),
+                metadata=metadata
+            )
+            # Log document addition
+            self.permission_service._log_audit(
+                user_id="system", # Assuming system action for now
+                action="add_document",
+                resource_type="document",
+                resource_id=ids[0],
+                details={'filename': metadata.get("source"), 'agent_id': "default_agent"}
+            )
+            return True
+            # Log document addition
+            self.permission_service._log_audit(
+                user_id="system", # Assuming system action for now
+                action="add_document",
+                resource_type="document",
+                resource_id=ids[0],
+                details={'filename': metadata.get("source"), 'agent_id': "default_agent"}
             )
             return True
         except Exception as e:
@@ -87,14 +153,15 @@ class RAGManager:
 
     def set_chunking_strategy(self, strategy, chunk_size=500, chunk_overlap=50):
         print(f"Setting chunking strategy to {strategy} with size {chunk_size} and overlap {chunk_overlap}")
-        self.chunk_size = chunk_size
-        self.chunk_overlap = chunk_overlap
+        self.rag_config.chunking_strategy = strategy
+        self.rag_config.chunk_size = chunk_size
+        self.rag_config.chunk_overlap = chunk_overlap
         # In a real implementation, 'strategy' could dictate different chunking algorithms
 
     def set_embedding_model(self, model_name):
         print(f"Setting embedding model to {model_name}")
-        self.embedding_model_name = model_name
-        self.embedding_model = SentenceTransformer(model_name)
+        self.rag_config.embedding_model_name = model_name
+        self.embedding_model = self._get_embedding_model(model_name)
         # Update the active collection's embedding model
         if self.active_collection:
             self.collections[self.active_collection.name]["embedding_model_name"] = model_name
@@ -102,25 +169,66 @@ class RAGManager:
 
     def set_vector_database(self, db_type):
         print(f"Setting vector database to {db_type}")
-        self.vector_database_type = db_type
+        self.rag_config.vector_database_type = db_type
         # In a real implementation, this would involve re-initializing the client
 
     def set_retrieval_parameters(self, top_k, similarity_threshold):
         print(f"Setting retrieval parameters: top_k={top_k}, similarity_threshold={similarity_threshold}")
-        self.retrieval_top_k = top_k
-        self.retrieval_similarity_threshold = similarity_threshold
+        self.rag_config.retrieval_top_k = top_k
+        self.rag_config.retrieval_similarity_threshold = similarity_threshold
 
-    def _chunk_text(self, text, chunk_size=500, chunk_overlap=50):
-        # A very basic chunking strategy. More advanced strategies would use
-        # sentence tokenization, recursive splitting, etc.
+    def _chunk_text(self, text):
+        if self.rag_config.chunking_strategy == "semantic":
+            return self._semantic_chunking(text)
+        elif self.rag_config.chunking_strategy == "sliding_window":
+            return self._sliding_window_chunking(text)
+        elif self.rag_config.chunking_strategy == "hierarchical":
+            return self._hierarchical_chunking(text)
+        elif self.rag_config.chunking_strategy == "code_aware":
+            return self._code_aware_chunking(text)
+        else:
+            return self._sliding_window_chunking(text) # Default fallback
+
+    def _semantic_chunking(self, text):
+        sentences = sent_tokenize(text)
+        chunks = []
+        current_chunk = []
+        current_length = 0
+
+        for sentence in sentences:
+            sentence_length = len(sentence.split())
+            if current_length + sentence_length <= self.rag_config.chunk_size:
+                current_chunk.append(sentence)
+                current_length += sentence_length
+            else:
+                chunks.append(" ".join(current_chunk))
+                current_chunk = [sentence]
+                current_length = sentence_length
+        if current_chunk:
+            chunks.append(" ".join(current_chunk))
+        return chunks
+
+    def _sliding_window_chunking(self, text):
         chunks = []
         words = text.split()
         i = 0
         while i < len(words):
-            chunk = " ".join(words[i:i + chunk_size])
+            chunk = " ".join(words[i:i + self.rag_config.chunk_size])
             chunks.append(chunk)
-            i += chunk_size - chunk_overlap
+            i += self.rag_config.chunk_size - self.rag_config.chunk_overlap
         return chunks
+
+    def _hierarchical_chunking(self, text):
+        # Placeholder for hierarchical chunking
+        # This would involve splitting by sections, then chunking those sections
+        print("Performing hierarchical chunking (placeholder).")
+        return self._sliding_window_chunking(text) # Fallback for now
+
+    def _code_aware_chunking(self, text):
+        # Placeholder for code-aware chunking
+        # This would involve parsing code structure (functions, classes) for chunks
+        print("Performing code-aware chunking (placeholder).")
+        return self._sliding_window_chunking(text) # Fallback for now
 
     def load_pdf(self, file_path):
         try:
@@ -173,11 +281,19 @@ class RAGManager:
         if not self.active_collection:
             print("No active collection selected. Cannot query documents.")
             return None
+        # Log document query
+        self.permission_service._log_audit(
+            user_id="current_user", # Placeholder for current user
+            action="query_documents",
+            resource_type="collection",
+            resource_id=self.active_collection.name,
+            details={'query_text': query_text}
+        )
         try:
             query_embedding = self.embedding_model.encode([query_text]).tolist()
             results = self.active_collection.query(
                 query_embeddings=query_embedding,
-                n_results=n_results,
+                n_results=self.rag_config.retrieval_top_k,
                 include=['documents', 'metadatas']
             )
             return results
@@ -185,13 +301,13 @@ class RAGManager:
             print(f"Error querying documents: {e}")
             return None
 
-    def hybrid_search(self, query_text, n_results=5):
+    def hybrid_search(self, query_text):
         # Placeholder for hybrid search implementation
         # This would typically combine keyword-based search (like BM25) with
         # semantic search (using embeddings).
         print(f"Performing hybrid search for: {query_text}")
         # For now, just return semantic search results
-        return self.query_documents(query_text, n_results)
+        return self.query_documents(query_text, self.rag_config.retrieval_top_k)
 
     def generate_response(self, query, api_key):
         try:
