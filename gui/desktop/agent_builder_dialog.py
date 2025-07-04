@@ -1,7 +1,19 @@
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QComboBox, QHBoxLayout, QCheckBox, QSpinBox, QTextEdit, QScrollArea, QWidget, QFileDialog, QInputDialog, QMessageBox
 from PySide6.QtCore import Qt
 import os
-from interpreter.core.config_manager import ConfigManager
+try:
+    from interpreter.core.config_manager import ConfigManager
+except ImportError:
+    # Fallback for different open-interpreter versions
+    class ConfigManager:
+        def __init__(self):
+            self.config = {}
+        
+        def get(self, key, default=None):
+            return self.config.get(key, default)
+        
+        def set(self, key, value):
+            self.config[key] = value
 from .services.prompt_library import PromptLibrary
 
 class AgentBuilderDialog(QDialog):

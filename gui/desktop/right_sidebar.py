@@ -9,7 +9,19 @@ from .services.web_search import WebSearchService
 from .services.rag_manager import RAGManager
 from .services.model_manager import ModelManager
 
-from interpreter.core.config_manager import ConfigManager
+try:
+    from interpreter.core.config_manager import ConfigManager
+except ImportError:
+    # Fallback for different open-interpreter versions
+    class ConfigManager:
+        def __init__(self):
+            self.config = {}
+        
+        def get(self, key, default=None):
+            return self.config.get(key, default)
+        
+        def set(self, key, value):
+            self.config[key] = value
 from .services.function_registry import FunctionRegistry
 from .services.stt_service import STTService
 from .services.tts_service import TTSService

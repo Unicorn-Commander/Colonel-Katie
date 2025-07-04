@@ -18,7 +18,19 @@ from .worker import InterpreterWorker, IndexingWorker
 from .right_sidebar import RightSidebar
 from .services.model_manager import ModelManager
 from .services.chat_manager import ChatManager
-from interpreter.core.config_manager import ConfigManager
+try:
+    from interpreter.core.config_manager import ConfigManager
+except ImportError:
+    # Fallback for different open-interpreter versions
+    class ConfigManager:
+        def __init__(self):
+            self.config = {}
+        
+        def get(self, key, default=None):
+            return self.config.get(key, default)
+        
+        def set(self, key, value):
+            self.config[key] = value
 
 from .components.model_selector import ModelSelector
 from .components.enhanced_status_bar import EnhancedStatusBar

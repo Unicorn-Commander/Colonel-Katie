@@ -7,8 +7,31 @@ from scipy.signal import butter, lfilter
 
 class STTService:
     def __init__(self, api_key=None):
-        self.client = openai.OpenAI(api_key=api_key) if api_key else openai.OpenAI()
-        self.audio = pyaudio.PyAudio()
+        # Only initialize OpenAI client if API key is provided
+        self.client = None
+        if api_key:
+            try:
+                self.client = openai.OpenAI(api_key=api_key)
+            except Exception as e:
+                print(f"Warning: Failed to initialize OpenAI client: {e}")
+        else:
+            # Get API key from environment if available
+            env_api_key = os.getenv("OPENAI_API_KEY")
+            if env_api_key:
+                try:
+                    self.client = openai.OpenAI(api_key=env_api_key)
+                except Exception as e:
+                    print(f"Warning: Failed to initialize OpenAI client with env key: {e}")
+            else:
+                print("Info: STTService initialized without OpenAI API key - transcription features disabled")
+        
+        # Initialize audio components (these work without API key)
+        try:
+            self.audio = pyaudio.PyAudio()
+        except Exception as e:
+            print(f"Warning: Failed to initialize audio: {e}")
+            self.audio = None
+            
         self.stream = None
         self.frames = []
         self.is_recording = False
@@ -117,6 +140,13 @@ class STTService:
         return temp_audio_path
 
     def transcribe_audio(self, audio_file_path, language=None):
+        if not self.client:
+            print("Error: OpenAI client not initialized. Please set OPENAI_API_KEY to use transcription features.")
+            # Clean up the temporary audio file
+            if os.path.exists(audio_file_path):
+                os.remove(audio_file_path)
+            return "Transcription unavailable - OpenAI API key required"
+            
         try:
             with open(audio_file_path, "rb") as audio_file:
                 transcript = self.client.audio.transcriptions.create(

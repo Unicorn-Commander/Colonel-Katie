@@ -1,12 +1,23 @@
 import requests
 from huggingface_hub import HfApi
 import openai
+import os
 
 class ModelManager:
     def __init__(self):
         self.ollama_url = "http://localhost:11434" # Default Ollama URL
         self.hf_api = HfApi()
-        self.openai_client = openai.OpenAI()
+        
+        # Only initialize OpenAI client if API key is available
+        self.openai_client = None
+        api_key = os.getenv("OPENAI_API_KEY")
+        if api_key:
+            try:
+                self.openai_client = openai.OpenAI(api_key=api_key)
+            except Exception as e:
+                print(f"Warning: Failed to initialize OpenAI client: {e}")
+        else:
+            print("Info: ModelManager initialized without OpenAI API key - OpenAI models unavailable")
 
     def discover_ollama_models(self):
         try:
@@ -28,6 +39,10 @@ class ModelManager:
             return []
 
     def discover_openai_models(self):
+        if not self.openai_client:
+            print("Info: OpenAI client not available - skipping OpenAI model discovery")
+            return []
+            
         try:
             models = self.openai_client.models.list()
             return [{"name": model.id, "source": "openai"} for model in models.data]

@@ -11,6 +11,7 @@ import shutil
 import json
 import platform
 from pathlib import Path
+from datetime import datetime
 
 class ColonelKatieInstaller:
     def __init__(self):
@@ -259,7 +260,7 @@ StartupWMClass=colonel-katie
         config_file = config_dir / "colonel-katie.json"
         config_data = {
             "version": "2.0",
-            "installation_date": str(Path().ctime()),
+            "installation_date": datetime.now().isoformat(),
             "installation_path": str(self.install_dir),
             "first_run": True,
             "settings": {
