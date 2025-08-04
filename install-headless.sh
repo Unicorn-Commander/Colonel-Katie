@@ -81,17 +81,47 @@ if [ -n "$MISSING_DEPS" ]; then
     exit 1
 fi
 
+# Check if this is an update or fresh install
+IS_UPDATE=false
+if [ -d "venv" ] && [ -f "venv/bin/activate" ]; then
+    IS_UPDATE=true
+    echo -e "\n${YELLOW}🔄 Existing installation detected${NC}"
+    echo -e "   Running in update mode..."
+    
+    # Backup user data before update
+    echo -e "\n${YELLOW}💾 Backing up user data...${NC}"
+    BACKUP_DIR="$PROJECT_DIR/.backup_$(date +%Y%m%d_%H%M%S)"
+    mkdir -p "$BACKUP_DIR"
+    
+    # Backup configuration if it exists
+    if [ -f ~/.interpreter/config.yaml ]; then
+        cp ~/.interpreter/config.yaml "$BACKUP_DIR/config.yaml"
+        echo -e "   ✅ Backed up config.yaml"
+    fi
+    
+    # Backup any custom profiles
+    if [ -d "$PROJECT_DIR/interpreter/terminal_interface/profiles/custom" ]; then
+        cp -r "$PROJECT_DIR/interpreter/terminal_interface/profiles/custom" "$BACKUP_DIR/custom_profiles"
+        echo -e "   ✅ Backed up custom profiles"
+    fi
+fi
+
 # Create virtual environment
-echo -e "\n${YELLOW}📦 Creating virtual environment...${NC}"
+echo -e "\n${YELLOW}📦 Managing virtual environment...${NC}"
 if [ -d "venv" ]; then
-    echo -e "${YELLOW}   Virtual environment already exists${NC}"
-    read -p "   Remove and recreate? (y/N) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        rm -rf venv
-        python3 -m venv venv
+    if [ "$IS_UPDATE" = true ]; then
+        echo -e "   Using existing virtual environment"
+    else
+        echo -e "${YELLOW}   Virtual environment already exists${NC}"
+        read -p "   Remove and recreate? (y/N) " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            rm -rf venv
+            python3 -m venv venv
+        fi
     fi
 else
+    echo -e "   Creating new virtual environment..."
     python3 -m venv venv
 fi
 
@@ -153,6 +183,18 @@ six>=1.16.0
 # NLP
 nltk>=3.8.1
 tokentrim>=0.1.13
+
+# RAG and embeddings
+chromadb>=0.4.0
+sentence-transformers>=2.2.0
+PyPDF2>=3.0.0
+python-docx>=0.8.11
+
+# Memory system
+mem0ai>=0.1.0
+redis>=5.0.1
+qdrant-client>=1.7.3
+psycopg2-binary>=2.9.9
 EOF
 
 # Install open-interpreter package structure
@@ -246,6 +288,13 @@ EOF
 else
     echo -e "   Config already exists at ~/.interpreter/config.yaml"
 fi
+
+# Optional: Install additional services
+echo -e "\n${YELLOW}📊 Optional Services:${NC}"
+echo -e "  For full memory features, you may want to install:"
+echo -e "  • Redis:    ${GREEN}sudo apt install redis-server${NC}"
+echo -e "  • PostgreSQL: ${GREEN}sudo apt install postgresql${NC}"
+echo -e "  • Qdrant:   ${GREEN}docker run -p 6333:6333 qdrant/qdrant${NC}"
 
 # Final instructions
 echo -e "\n${GREEN}═══════════════════════════════════════════════════════${NC}"
