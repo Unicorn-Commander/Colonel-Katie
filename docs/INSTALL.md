@@ -344,7 +344,31 @@ python main.py --debug
 
 ## Upgrading
 
-### Standard Upgrade
+### Automatic Update (Recommended)
+```bash
+cd Colonel-Katie
+./update.sh
+```
+
+This automatically:
+- Pulls latest changes
+- Updates dependencies
+- Preserves your configuration
+- Creates backups
+
+### Advanced Update
+```bash
+cd Colonel-Katie
+./update-headless.sh
+```
+
+Features:
+- Shows what will be updated
+- Automatic backup creation
+- Handles uncommitted changes
+- Runs migration scripts
+
+### Manual Update
 ```bash
 cd Colonel-Katie
 git pull origin main
@@ -357,11 +381,10 @@ pip install --upgrade -r requirements.txt
 cd Colonel-Katie
 git fetch --all
 git checkout v2.1.0  # or latest version
-rm -rf venv/
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+./install-headless.sh  # or python install.py for GUI
 ```
+
+For more details, see [UPDATING.md](./UPDATING.md)
 
 ---
 

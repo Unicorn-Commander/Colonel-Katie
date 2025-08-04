@@ -1,11 +1,61 @@
-# Changelog
+# 📋 Changelog - Colonel Katie
 
-All notable changes to The_Colonel project will be documented in this file.
+All notable changes to Colonel Katie project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [2.2.0] - 2025-01-04 - Update System & Enhanced Headless Mode
+
+### 🎉 Major Features
+
+#### Update System
+- ✨ Added automatic update system with `update.sh` and `update-headless.sh`
+- 🔄 Smart update detection with uncommitted changes handling
+- 💾 Automatic backups before updates
+- 📊 Update preview showing what will change
+- 🛡️ Preserves user configuration and custom profiles
+
+#### Enhanced Headless Mode
+- 🧠 **Full RAG Support**: Document processing for PDF, DOCX, TXT, MD
+- 💭 **Memory System**: Persistent memory with SQLite/ChromaDB or PostgreSQL/Qdrant
+- 🔍 **Embeddings**: Semantic search with sentence-transformers
+- 📚 **Vector Storage**: ChromaDB integration for document indexing
+- 🚀 **mem0ai Integration**: Advanced memory management
+
+### 🔧 Improvements
+
+#### Installation
+- 📦 Enhanced `install-headless.sh` with update mode support
+- 🔍 Better dependency resolution and error handling
+- 🎯 Separate requirements for headless vs GUI installations
+- ⚡ Faster installation with optimized dependency order
+
+#### Documentation
+- 📖 Comprehensive README with feature comparison table
+- 📚 New `HEADLESS_FEATURES.md` explaining all headless capabilities
+- 🔄 Added `UPDATING.md` for update process documentation
+- 📋 Updated CHANGELOG.md structure and format
+
+### 🐛 Bug Fixes
+- Fixed missing RAG dependencies in headless installation
+- Fixed memory backend initialization
+- Improved Python 3.13 compatibility checks
+
+### 🔨 Technical Changes
+- Added `chromadb>=0.4.0` to headless requirements
+- Added `sentence-transformers>=2.2.0` for embeddings
+- Added `mem0ai>=0.1.0` for advanced memory
+- Added `PyPDF2>=3.0.0` and `python-docx>=0.8.11` for document processing
+- Added `redis>=5.0.1` and `qdrant-client>=1.7.3` for scalable backends
+- Added `psycopg2-binary>=2.9.9` for PostgreSQL support
+
+### 📝 Configuration
+- New memory configuration options in `~/.interpreter/config.yaml`
+- Support for multiple memory backends (SQLite/ChromaDB, PostgreSQL/Qdrant)
+- RAG configuration with chunk size and overlap settings
 
 ## [2.1.0] - 2025-07-02 - Cutting-Edge GUI & Desktop Integration
 

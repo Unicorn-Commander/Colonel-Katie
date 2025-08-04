@@ -97,12 +97,17 @@ python main.py
 - ✅ **Web Browsing** - Automated web interactions
 - ✅ **Python 3.13 Support** - Latest Python compatibility
 
-### Headless Features
+### Headless Features (Full Power!)
 - 🖥️ **Server-Optimized** - Minimal resource usage
 - 🔧 **CLI Interface** - Full terminal control
 - 🐳 **Container-Ready** - Docker/Kubernetes compatible
 - 📡 **API Server Mode** - RESTful API for integrations
 - 🤖 **Automation Scripts** - Batch processing support
+- 🧠 **Memory System** - Persistent memory across sessions
+- 📚 **RAG Support** - Full document processing (PDF, DOCX, etc.)
+- 🔍 **Embeddings** - Semantic search and similarity
+- 💾 **Vector Storage** - ChromaDB/Qdrant integration
+- 🔄 **Auto-Updates** - Safe update system with backups
 
 ### GUI Exclusive Features
 - 🎨 **Visual Agent Builder** - Create agents without code
@@ -175,6 +180,25 @@ pip install -e .
 pip install -r requirements-dev.txt
 ```
 
+### 🔄 Updating Your Installation
+
+Keep Colonel Katie up to date with the built-in update system:
+
+```bash
+# Simple update (pulls latest and updates dependencies)
+cd Colonel-Katie
+./update.sh
+
+# Advanced update with backup options
+./update-headless.sh
+```
+
+Updates preserve:
+- ✅ Your configuration (`~/.interpreter/config.yaml`)
+- ✅ Custom profiles
+- ✅ Conversation history
+- ✅ API keys and settings
+
 ---
 
 ## 💻 Usage Examples
@@ -224,6 +248,24 @@ interpreter < commands.txt
 
 # Use in scripts
 echo "analyze /var/log/syslog for errors" | interpreter
+```
+
+### Memory and RAG Features (Headless)
+
+```python
+# Memory persists across sessions
+interpreter.chat("Remember that I prefer Python for data analysis")
+# ... restart later ...
+interpreter.chat("What's my preferred language for data analysis?")
+# Response: "Python"
+
+# Document processing
+interpreter.computer.docs.load("report.pdf")
+interpreter.computer.docs.load("data.xlsx")
+interpreter.chat("Summarize the key findings from these documents")
+
+# Semantic search
+interpreter.chat("Find all mentions of performance improvements")
 ```
 
 ---
