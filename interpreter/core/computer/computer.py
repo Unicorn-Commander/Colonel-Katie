@@ -17,7 +17,13 @@ from .skills.skills import Skills
 from .sms.sms import SMS
 from .terminal.terminal import Terminal
 from .vision.vision import Vision
-from ...kde_tools.wrappers import KDEClipboardWrapper, KDEFileOperationsWrapper, KDENotificationsWrapper, KDEPlasmaShellWrapper, KDEVirtualDesktopsWrapper, KDEWindowsWrapper
+
+# Optional KDE imports - only for GUI installations
+try:
+    from ...kde_tools.wrappers import KDEClipboardWrapper, KDEFileOperationsWrapper, KDENotificationsWrapper, KDEPlasmaShellWrapper, KDEVirtualDesktopsWrapper, KDEWindowsWrapper
+    KDE_AVAILABLE = True
+except ImportError:
+    KDE_AVAILABLE = False
 
 
 class Computer:
@@ -46,13 +52,22 @@ class Computer:
         self.ai = Ai(self)
         self.files = Files(self)
 
-        # KDE Tools
-        self.kde_clipboard = KDEClipboardWrapper(self)
-        self.kde_file_operations = KDEFileOperationsWrapper(self)
-        self.kde_notifications = KDENotificationsWrapper(self)
-        self.kde_plasma_shell = KDEPlasmaShellWrapper(self)
-        self.kde_virtual_desktops = KDEVirtualDesktopsWrapper(self)
-        self.kde_windows = KDEWindowsWrapper(self)
+        # KDE Tools (only available with GUI installation)
+        if KDE_AVAILABLE:
+            self.kde_clipboard = KDEClipboardWrapper(self)
+            self.kde_file_operations = KDEFileOperationsWrapper(self)
+            self.kde_notifications = KDENotificationsWrapper(self)
+            self.kde_plasma_shell = KDEPlasmaShellWrapper(self)
+            self.kde_virtual_desktops = KDEVirtualDesktopsWrapper(self)
+            self.kde_windows = KDEWindowsWrapper(self)
+        else:
+            # Set to None when KDE tools aren't available
+            self.kde_clipboard = None
+            self.kde_file_operations = None
+            self.kde_notifications = None
+            self.kde_plasma_shell = None
+            self.kde_virtual_desktops = None
+            self.kde_windows = None
 
         self.emit_images = True
         self.api_base = "https://api.openinterpreter.com/v0"
