@@ -36,7 +36,7 @@ easyocr = { version = "^1.7.1", optional = true }
 janus = { version = "^1.0.0", optional = true }
 
 # Required dependencies
-python = ">=3.9,<3.13"
+python = ">=3.9,<4"
 setuptools = "*"
 astor = "^0.8.1"
 git-python = "^1.0.3"
@@ -79,7 +79,7 @@ qdrant-client = "^1.7.3"
 openai = "*"
 psycopg2-binary = "^2.9.9"
 scikit-learn = "^1.5.0"
-numpy = "1.26.0"
+numpy = ">=1.26.0"
 beautifulsoup4 = "*"
 requests = "*"
 lxml = "*"
